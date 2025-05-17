@@ -1645,23 +1645,40 @@
 
         // --- Main App Functionality ---
 
-        // Update Profile Display (Header)
-        function updateProfileDisplay() {
-             const profileImg = headerProfilePic.querySelector('img');
-             if (userProfile && userProfile.profilePicUrl) {
-                 profileImg.src = userProfile.profilePicUrl;
-                 profileImg.style.display = 'block';
-                  headerProfilePic.style.backgroundColor = 'transparent'; // Remove placeholder bg
-             } else {
-                 profileImg.src = ''; // Or a default user icon image URL
-                  profileImg.style.display = 'none';
-                  headerProfilePic.style.backgroundColor = var(--border-color); // Keep placeholder bg
-                  // Could add initials here instead of just background, requires creating an element
-                  headerProfilePic.innerHTML = userProfile?.fullName ? userProfile.fullName.charAt(0).toUpperCase() : '<i class="fas fa-user"></i>'; // Example: Display first letter or default icon
-                  headerProfilePic.style.fontSize = '20px';
-                  headerProfilePic.style.color = var(--secondary-text-color);
-             }
-        }
+       // Profil Görünümünü Güncelle (Header)
+function updateProfileDisplay() {
+    const profileImg = headerProfilePic.querySelector('img');
+
+    // CSS değişkenlerini al
+    const rootStyles = getComputedStyle(document.documentElement);
+    const borderColor = rootStyles.getPropertyValue('--border-color').trim();
+    const secondaryTextColor = rootStyles.getPropertyValue('--secondary-text-color').trim();
+
+    if (userProfile && userProfile.profilePicUrl) {
+        // Profil resmi varsa, göster
+        profileImg.src = userProfile.profilePicUrl;
+        profileImg.style.display = 'block';
+        headerProfilePic.style.backgroundColor = 'transparent'; // Yer tutucu arka planı kaldır
+        headerProfilePic.innerHTML = ''; // İçeriği temizle
+    } else {
+        // Profil resmi yoksa, varsayılan durumu göster
+        profileImg.src = '';
+        profileImg.style.display = 'none';
+        headerProfilePic.style.backgroundColor = borderColor; // Yer tutucu arka plan rengi
+       
+        // Kullanıcının adının ilk harfini göster veya varsayılan ikon
+        headerProfilePic.innerHTML = userProfile?.fullName 
+            ? userProfile.fullName.charAt(0).toUpperCase() 
+            : '<i class="fas fa-user"></i>';
+
+        headerProfilePic.style.fontSize = '20px';
+        headerProfilePic.style.color = secondaryTextColor;
+        headerProfilePic.style.display = 'flex';
+        headerProfilePic.style.alignItems = 'center';
+        headerProfilePic.style.justifyContent = 'center';
+    }
+}
+
 
         // Save Profile Edits
         saveProfileButton.addEventListener('click', async () => {
