@@ -235,6 +235,7 @@
             cursor: pointer;
         }
 
+
         /* --- Result Screen (Modal) --- */
         #result-modal {
             position: fixed;
@@ -338,6 +339,7 @@
                 width: 85%;
             }
         }
+
     </style>
 </head>
 <body>
@@ -456,15 +458,15 @@
             update
         } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-        // Your web app's Firebase configuration
+        // Your web app's Firebase configuration (AS PROVIDED BY USER)
         const firebaseConfig = {
-            apiKey: "AIzaSyDhLuMymmJPkmMQKvYX8Ma94VAG-uf1kOk",
-            authDomain: "test-463d2.firebaseapp.com",
-            databaseURL: "https://test-463d2-default-rtdb.firebaseio.com",
-            projectId: "test-463d2",
-            storageBucket: "test-463d2.firebasestorage.app",
-            messagingSenderId: "793933331185",
-            appId: "1:793933331185:web:304e16633345f88fc7c750"
+          apiKey: "AIzaSyDhLuMymmJPkmMQKvYX8Ma94VAG-uf1kOk",
+          authDomain: "test-463d2.firebaseapp.com",
+          databaseURL: "https://test-463d2-default-rtdb.firebaseio.com",
+          projectId: "test-463d2",
+          storageBucket: "test-463d2.firebasestorage.app",
+          messagingSenderId: "793933331185",
+          appId: "1:793933331185:web:304e16633345f88fc7c750"
         };
 
         // Initialize Firebase
@@ -515,6 +517,7 @@
         let currentLevel = 0;
         let levelTimerInterval;
         let timeLeft = 180; // 3 minutes per level initially
+        let allTestsPassedLastSubmission = false; 
 
         // --- Game Levels Data ---
         const levels = [
@@ -540,6 +543,7 @@
                 testCases: [ { input: [1,2,3], expected: 6}, {input: [10, -2, 5], expected: 13} ],
                 hint: "A loop or the reduce() method can be helpful here."
             }
+            // Add more levels here...
         ];
 
         // --- Authentication Logic ---
@@ -559,7 +563,7 @@
                 loginMessage.textContent = 'Login successful! Initializing system...';
                 // Auth state change will handle UI update
             } catch (error) {
-                loginMessage.textContent = `Error: ${error.message}`;
+                loginMessage.textContent = `Error: ${error.code} - ${error.message}`;
                 console.error("Login error:", error);
             }
         });
@@ -584,7 +588,7 @@
                 registerMessage.textContent = 'Registration successful! Please login.';
                 toggleAuthView(true);
             } catch (error) {
-                registerMessage.textContent = `Error: ${error.message}`;
+                registerMessage.textContent = `Error: ${error.code} - ${error.message}`;
                 console.error("Registration error:", error);
             }
         });
@@ -592,6 +596,7 @@
         logoutButton.addEventListener('click', async () => {
             try {
                 await signOut(auth);
+                // Auth state change will handle UI update
             } catch (error) {
                 console.error("Logout error:", error);
                 alert("Error logging out.");
@@ -605,15 +610,16 @@
                 userInfoDisplay.classList.remove('hidden');
                 authContainer.classList.add('hidden');
                 gameContainer.classList.remove('hidden');
-                await loadUserProgress();
+                await loadUserProgress(); 
                 loadLevel(currentLevel);
             } else {
                 currentUser = null;
                 userInfoDisplay.classList.add('hidden');
                 authContainer.classList.remove('hidden');
                 gameContainer.classList.add('hidden');
-                currentLevel = 0;
-                loadLocalProgress();
+                loadLocalProgress(); 
+                // No need to call loadLevel here, as game container is hidden.
+                // currentLevel will be set by loadLocalProgress for when user logs in next.
             }
         });
 
@@ -623,6 +629,7 @@
                 displayGameComplete();
                 return;
             }
+            currentLevel = levelIndex; // Ensure currentLevel is correctly set
             const levelData = levels[levelIndex];
             missionTitle.textContent = levelData.title;
             missionBrief.textContent = levelData.brief;
@@ -631,25 +638,29 @@
             outputArea.textContent = 'Awaiting execution...';
             codeFeedback.textContent = 'No feedback yet.';
             nextLevelButton.classList.add('hidden');
-            startTimer(180);
+            allTestsPassedLastSubmission = false; // Reset for new level
+            startTimer(180); 
         }
-
+        
         submitCodeButton.addEventListener('click', () => {
             const userCode = codeEditor.value;
             const levelData = levels[currentLevel];
-            let allTestsPassed = true;
+            allTestsPassedLastSubmission = true; // Assume true, set to false on any failure
             let resultsLog = `Executing for Mission: ${levelData.title}\n\n`;
             
             stopTimer();
 
             try {
-                const fnNameMatch = levelData.problem.match(/function\s+(\w+)\s*\(/);
+                const fnNameMatch = levelData.problem.match(/`(\w+)`/); // Look for function name in backticks
                 if (!fnNameMatch || !fnNameMatch[1]) {
-                    throw new Error("Could not determine function name from problem description.");
+                     fnNameMatch = levelData.problem.match(/function\s+(\w+)\s*\(/); // Fallback for "function funcName ("
+                }
+                if (!fnNameMatch || !fnNameMatch[1]) {
+                    throw new Error("Could not determine function name from problem description. Ensure it's like `myFunction` or `function myFunction(...){}`.");
                 }
                 const functionName = fnNameMatch[1];
                 
-                const scriptToRun = userCode + `\nreturn ${functionName};`;
+                const scriptToRun = userCode + `\nif (typeof ${functionName} !== 'undefined') return ${functionName}; else throw new Error("Function ${functionName} is not defined or returned correctly.");`;
                 const userFunction = new Function(scriptToRun)();
                 
                 if (typeof userFunction !== 'function') {
@@ -660,46 +671,43 @@
                     resultsLog += `Test Case ${index + 1}:\n`;
                     resultsLog += `Input: ${JSON.stringify(test.input)}\n`;
                     let actualOutput;
-                    let testPassed = false;
                     try {
                         actualOutput = userFunction(test.input);
                         resultsLog += `Actual Output: ${JSON.stringify(actualOutput)}\n`;
                         resultsLog += `Expected Output: ${JSON.stringify(test.expected)}\n`;
                         
                         if (JSON.stringify(actualOutput) === JSON.stringify(test.expected)) {
-                            testPassed = true;
                             resultsLog += `Status: PASSED\n\n`;
                         } else {
-                            testPassed = false;
                             resultsLog += `Status: FAILED\n\n`;
-                            allTestsPassed = false;
+                            allTestsPassedLastSubmission = false;
                         }
                     } catch (e) {
-                        resultsLog += `Runtime Error during test: ${e.message}\nStatus: FAILED\n\n`;
-                        allTestsPassed = false;
+                        resultsLog += `Runtime Error during test case ${index + 1} (${functionName}(${JSON.stringify(test.input)})) : ${e.message}\nStatus: FAILED\n\n`;
+                        allTestsPassedLastSubmission = false;
                     }
                 });
 
             } catch (e) {
-                resultsLog = `Error in your code or setup:\n${e.message}\n\nEnsure your function is named "${levels[currentLevel].problem.match(/`(\w+)`/)[1]}" and correctly defined.`;
-                allTestsPassed = false;
+                resultsLog = `Error in your code or setup:\n${e.message}\n\nEnsure your function is correctly defined and named as specified in the problem.`;
+                allTestsPassedLastSubmission = false;
             }
 
             outputArea.textContent = resultsLog;
 
-            if (allTestsPassed) {
+            if (allTestsPassedLastSubmission) {
                 codeFeedback.textContent = 'All test cases passed! Mission accomplished.';
                 showResultScreen(true, `Level ${currentLevel + 1} Cleared!`, 100, 180 - timeLeft, "Excellent");
-                if (currentLevel < levels.length -1) {
+                updateUserProgress(currentLevel + 1); // Save progress (next level index)
+                if (currentLevel < levels.length -1) { // If not the last level
                      nextLevelButton.classList.remove('hidden');
                      nextLevelButton.disabled = false;
                      nextLevelButton.textContent = "Proceed to Next Mission";
-                } else {
+                } else { // Last level completed
                     nextLevelButton.textContent = "All Missions Complete!";
                     nextLevelButton.classList.remove('hidden');
-                    nextLevelButton.disabled = true;
+                    nextLevelButton.disabled = true; 
                 }
-                updateUserProgress(currentLevel + 1);
             } else {
                 codeFeedback.textContent = 'Some test cases failed. Review your logic and the output logs.';
                 showResultScreen(false, `Level ${currentLevel + 1} Attempt Failed`, 0, 180 - timeLeft, "Needs Review");
@@ -709,7 +717,7 @@
 
         resetCodeButton.addEventListener('click', () => {
             if (confirm("Are you sure you want to reset your code for this level?")) {
-                loadLevel(currentLevel);
+                loadLevel(currentLevel); // Reloads current level template and restarts timer
             }
         });
 
@@ -723,95 +731,22 @@
         });
         
         nextLevelButton.addEventListener('click', () => {
-            if(allTestsPassedLastSubmission || !nextLevelButton.classList.contains('hidden')) {
-                 currentLevel++;
-                if (currentLevel < levels.length) {
-                    loadLevel(currentLevel);
-                } else {
-                    displayGameComplete();
-                }
+            // This button should only be visible if the current level was successfully completed.
+            // The updateUserProgress already saved the next level index.
+            // loadUserProgress will fetch this, then loadLevel will use it.
+            // So, we just need to trigger the load sequence.
+            if (allTestsPassedLastSubmission && currentLevel < levels.length - 1) {
+                loadLevel(currentLevel + 1); // Directly load next level
+            } else if (currentLevel >= levels.length - 1) {
+                 displayGameComplete();
             }
         });
-        
-        let allTestsPassedLastSubmission = false;
 
-        submitCodeButton.addEventListener('click', () => {
-            const userCode = codeEditor.value;
-            const levelData = levels[currentLevel];
-            allTestsPassedLastSubmission = true;
-            let resultsLog = `Executing for Mission: ${levelData.title}\n\n`;
-            
-            stopTimer();
-
-            try {
-                const fnNameMatch = levelData.problem.match(/function\s+(\w+)\s*\(/);
-                if (!fnNameMatch || !fnNameMatch[1]) {
-                    throw new Error("Could not determine function name from problem description.");
-                }
-                const functionName = fnNameMatch[1];
-                
-                const scriptToRun = userCode + `\nreturn ${functionName};`;
-                const userFunction = new Function(scriptToRun)();
-                
-                if (typeof userFunction !== 'function') {
-                    throw new Error(`Your code did not properly define or return the function "${functionName}".`);
-                }
-
-                levelData.testCases.forEach((test, index) => {
-                    resultsLog += `Test Case ${index + 1}:\n`;
-                    resultsLog += `Input: ${JSON.stringify(test.input)}\n`;
-                    let actualOutput;
-                    let testPassed = false;
-                    try {
-                        actualOutput = userFunction(test.input);
-                        resultsLog += `Actual Output: ${JSON.stringify(actualOutput)}\n`;
-                        resultsLog += `Expected Output: ${JSON.stringify(test.expected)}\n`;
-                        
-                        if (JSON.stringify(actualOutput) === JSON.stringify(test.expected)) {
-                            testPassed = true;
-                            resultsLog += `Status: PASSED\n\n`;
-                        } else {
-                            testPassed = false;
-                            resultsLog += `Status: FAILED\n\n`;
-                            allTestsPassedLastSubmission = false;
-                        }
-                    } catch (e) {
-                        resultsLog += `Runtime Error during test: ${e.message}\nStatus: FAILED\n\n`;
-                        allTestsPassedLastSubmission = false;
-                    }
-                });
-
-            } catch (e) {
-                resultsLog = `Error in your code or setup:\n${e.message}\n\nEnsure your function is named "${levels[currentLevel].problem.match(/`(\w+)`/)[1]}" and correctly defined.`;
-                allTestsPassedLastSubmission = false;
-            }
-
-            outputArea.textContent = resultsLog;
-
-            if (allTestsPassedLastSubmission) {
-                codeFeedback.textContent = 'All test cases passed! Mission accomplished.';
-                showResultScreen(true, `Level ${currentLevel + 1} Cleared!`, 100, 180 - timeLeft, "Excellent");
-                if (currentLevel < levels.length -1) {
-                     nextLevelButton.classList.remove('hidden');
-                     nextLevelButton.disabled = false;
-                     nextLevelButton.textContent = "Proceed to Next Mission";
-                } else {
-                    nextLevelButton.textContent = "All Missions Complete!";
-                    nextLevelButton.classList.remove('hidden');
-                    nextLevelButton.disabled = true;
-                }
-                updateUserProgress(currentLevel + 1);
-            } else {
-                codeFeedback.textContent = 'Some test cases failed. Review your logic and the output logs.';
-                showResultScreen(false, `Level ${currentLevel + 1} Attempt Failed`, 0, 180 - timeLeft, "Needs Review");
-                nextLevelButton.classList.add('hidden');
-            }
-        });
 
         // --- Timer Logic ---
         function startTimer(duration) {
             timeLeft = duration;
-            clearInterval(levelTimerInterval);
+            clearInterval(levelTimerInterval); 
             updateTimerDisplay();
             levelTimerInterval = setInterval(() => {
                 timeLeft--;
@@ -820,11 +755,12 @@
                     clearInterval(levelTimerInterval);
                     timeDisplay.textContent = "Time's Up!";
                     codeFeedback.textContent = "Time's up! Mission compromised. Try again faster.";
-                    submitCodeButton.disabled = true;
+                    submitCodeButton.disabled = true; 
                     showResultScreen(false, `Level ${currentLevel + 1} Failed - Time Out`, 0, duration, "Time Out");
+                    nextLevelButton.classList.add('hidden');
                 }
             }, 1000);
-            submitCodeButton.disabled = false;
+            submitCodeButton.disabled = false; 
         }
 
         function stopTimer() {
@@ -839,25 +775,30 @@
 
         // --- User Progress (Firebase & LocalStorage) ---
         async function loadUserProgress() {
+            let levelToLoad = 0;
             if (currentUser) {
                 try {
                     const snapshot = await get(child(ref(database), `users/${currentUser.uid}/progress`));
                     if (snapshot.exists()) {
-                        currentLevel = snapshot.val().level || 0;
-                    } else {
-                        currentLevel = 0;
+                        levelToLoad = snapshot.val().level || 0;
                     }
                 } catch (error) {
                     console.error("Error loading user progress:", error);
-                    currentLevel = 0;
                 }
             } else {
-                loadLocalProgress();
+                 const savedProgress = localStorage.getItem('codeVeritasProgress');
+                if (savedProgress) {
+                    levelToLoad = JSON.parse(savedProgress).level || 0;
+                }
             }
+            currentLevel = (levelToLoad < levels.length) ? levelToLoad : 0; // Ensure level is within bounds
         }
 
-        async function updateUserProgress(completedLevel) {
-            const newProgressLevel = Math.max(currentLevel, completedLevel);
+        async function updateUserProgress(completedLevelIndex) {
+            // Progress stores the index of the *next* level the user should start.
+            // So if level 0 (index) is completed, progress is 1.
+            const newProgressLevel = completedLevelIndex; 
+
             if (currentUser) {
                 try {
                     await set(ref(database, `users/${currentUser.uid}/progress`), {
@@ -870,15 +811,13 @@
             } else {
                 localStorage.setItem('codeVeritasProgress', JSON.stringify({ level: newProgressLevel }));
             }
-            if (newProgressLevel > currentLevel) {
-                currentLevel = newProgressLevel -1;
-            }
         }
         
-        function loadLocalProgress() {
+        function loadLocalProgress() { // Only used when user logs out or is not logged in initially
             const savedProgress = localStorage.getItem('codeVeritasProgress');
             if (savedProgress) {
                 currentLevel = JSON.parse(savedProgress).level || 0;
+                 currentLevel = (currentLevel < levels.length) ? currentLevel : 0; // Ensure valid
             } else {
                 currentLevel = 0;
             }
@@ -893,8 +832,10 @@
             submitCodeButton.disabled = true;
             hintButton.disabled = true;
             resetCodeButton.disabled = true;
-            nextLevelButton.classList.add('hidden');
-            outputArea.textContent = "System Integrity: 100%\nAll Operations Successful.";
+            nextLevelButton.textContent = "All Missions Complete!";
+            nextLevelButton.classList.remove('hidden');
+            nextLevelButton.disabled = true;
+            outputArea.textContent = "System Integrity: 100%\nAll Operations Successful."
             stopTimer();
         }
         
@@ -905,24 +846,24 @@
             resultMessage.textContent = message;
             scoreValue.textContent = score;
             timeValue.textContent = `${timeTaken}s`;
-            qualityValue.textContent = quality;
+            qualityValue.textContent = quality; 
 
             resultModal.classList.remove('hidden');
         }
 
         closeResultModalButton.addEventListener('click', () => {
             resultModal.classList.add('hidden');
-            if (allTestsPassedLastSubmission && currentLevel < levels.length -1) {
-            } else if (allTestsPassedLastSubmission && currentLevel >= levels.length -1) {
-                 displayGameComplete();
-            } else {
-                if (timeLeft <=0) {
+            if (!allTestsPassedLastSubmission) { // If failed
+                if (timeLeft <= 0) { // if time ran out, reset level by reloading it
                     loadLevel(currentLevel);
-                } else {
-                    submitCodeButton.disabled = false;
+                } else { // if failed by submission, re-enable submit button
+                    submitCodeButton.disabled = false; 
                 }
             }
+            // If successful, the "Proceed to Next Mission" button handles moving forward.
+            // Or if it was the last level, game complete screen is shown.
         });
+
 
         // --- Matrix Rain Effect ---
         const canvas = document.getElementById('matrix-canvas');
@@ -931,53 +872,51 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789@#$%^&*()*&^%';
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789@#$%^&*()*&^%?<>{}[]|';
         const fontSize = 12;
-        const columns = canvas.width / fontSize;
+        let columns = Math.floor(canvas.width / fontSize); // Use Math.floor
         const drops = [];
 
         for (let x = 0; x < columns; x++) {
-            drops[x] = 1;
+            drops[x] = 1 + Math.floor(Math.random() * (canvas.height / fontSize)); // Randomize initial position
         }
 
         function drawMatrix() {
-            ctx.fillStyle = 'rgba(10, 10, 10, 0.04)';
+            ctx.fillStyle = 'rgba(10, 10, 10, 0.04)'; 
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            ctx.fillStyle = 'rgba(0, 255, 65, 0.7)';
+            ctx.fillStyle = 'rgba(0, 255, 65, 0.7)'; 
             ctx.font = fontSize + 'px Courier New';
 
             for (let i = 0; i < drops.length; i++) {
                 const text = letters[Math.floor(Math.random() * letters.length)];
                 ctx.fillText(text, i * fontSize, drops[i] * fontSize);
 
-                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) { // Reset drop
                     drops[i] = 0;
                 }
                 drops[i]++;
             }
         }
         
-        let matrixInterval = setInterval(drawMatrix, 45);
+        let matrixInterval = setInterval(drawMatrix, 45); 
 
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            clearInterval(matrixInterval);
-            const newColumns = canvas.width / fontSize;
-            drops.length = 0;
-             for (let x = 0; x < newColumns; x++) {
+            columns = Math.floor(canvas.width / fontSize); // Recalculate columns
+            drops.length = 0; // Clear old drops array
+             for (let x = 0; x < columns; x++) { // Reinitialize drops for new column count
                 drops[x] = 1 + Math.floor(Math.random() * (canvas.height / fontSize) );
             }
-            matrixInterval = setInterval(drawMatrix, 45);
+            // No need to clear and restart interval if drawMatrix uses dynamic canvas.width/height
+            // But if columns count changed, drops array needs update
         });
 
-        if (!currentUser) {
-             loadLocalProgress();
-             if (authContainer.classList.contains('hidden')) {
-                 loadLevel(currentLevel);
-             }
-        }
+
+        // Initial Load: onAuthStateChanged handles the main logic for view and data loading.
+        // If no user is signed in initially, loadLocalProgress is called by onAuthStateChanged's else block.
+
     </script>
 </body>
 </html>
