@@ -104,7 +104,15 @@
         #auth-message {
             margin-top: 15px;
             font-size: 0.9em;
+            min-height: 1.2em; /* Reserve space for messages */
         }
+        #login-message, #register-message {
+             color: var(--error-color); /* Default to error color for messages */
+        }
+        #login-message.success, #register-message.success {
+            color: var(--success-color);
+        }
+
 
         .toggle-auth {
             color: var(--primary-color);
@@ -225,6 +233,7 @@
             padding: 5px 10px;
             border-radius: 3px;
             color: var(--primary-color);
+            z-index: 100; /* Ensure it's above canvas */
         }
         #user-info button {
             margin-left: 10px;
@@ -306,7 +315,7 @@
             100% { text-shadow: 0 0 2px var(--primary-color); }
         }
 
-        /* Matrix Rain Canvas (Optional but cool) */
+        /* Matrix Rain Canvas */
         #matrix-canvas {
             position: fixed;
             top: 0;
@@ -314,7 +323,7 @@
             width: 100%;
             height: 100%;
             z-index: -1; /* Behind all content */
-            opacity: 0.3; /* Adjust for subtlety */
+            opacity: 0.3; 
         }
 
         /* Responsive */
@@ -454,11 +463,12 @@
             ref, 
             set, 
             get,
-            child,
-            update
+            child
         } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
         // Your web app's Firebase configuration (AS PROVIDED BY USER)
+        // CRITICAL: Ensure these values are 100% correct and your Firebase project
+        // (test-463d2) has Email/Password Authentication ENABLED in the Firebase Console.
         const firebaseConfig = {
           apiKey: "AIzaSyDhLuMymmJPkmMQKvYX8Ma94VAG-uf1kOk",
           authDomain: "test-463d2.firebaseapp.com",
@@ -470,9 +480,33 @@
         };
 
         // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const database = getDatabase(app);
+        let app;
+        let auth;
+        let database;
+
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            database = getDatabase(app);
+        } catch (error) {
+            console.error("Firebase initialization error:", error);
+            // Display a user-friendly message on the auth screen
+            const authContainerCheck = document.getElementById('auth-container');
+            const loginMessageCheck = document.getElementById('login-message');
+            if (authContainerCheck && !authContainerCheck.classList.contains('hidden') && loginMessageCheck) {
+                loginMessageCheck.textContent = "CRITICAL ERROR: Could not initialize Firebase. Check console.";
+            } else if (document.body) { // Fallback if auth screen isn't visible
+                 document.body.innerHTML = `<p style="color:red; font-size:18px; text-align:center; margin-top: 50px;">
+                    CRITICAL ERROR: Could not initialize Firebase. Please ensure your Firebase project
+                    (Project ID: ${firebaseConfig.projectId || 'unknown'}) is correctly configured and
+                    Authentication (Email/Password) is enabled in the Firebase Console.
+                    Check the browser console (F12) for more details. Error: ${error.message}
+                    </p>`;
+            }
+            // Stop further script execution if Firebase fails to initialize
+            throw error; 
+        }
+
 
         // DOM Elements
         const authContainer = document.getElementById('auth-container');
@@ -516,37 +550,32 @@
         let currentUser = null;
         let currentLevel = 0;
         let levelTimerInterval;
-        let timeLeft = 180; // 3 minutes per level initially
+        let timeLeft = 180; 
         let allTestsPassedLastSubmission = false; 
 
-        // --- Game Levels Data ---
         const levels = [
-            { // Level 1
+            { 
                 title: "Mission: String Reversal Protocol",
                 brief: "A critical data packet has been intercepted in reverse order. We need you to write a script to flip it back.",
                 problem: "Write a JavaScript function called `reverseString` that takes one argument, a string, and returns that string reversed.",
                 template: `function reverseString(str) {\n  // Your code here\n\n  return "";\n}`,
                 testCases: [
-                    { input: "hello", expected: "olleh" },
-                    { input: "world", expected: "dlrow" },
-                    { input: "JavaScript", expected: "tpircSavaJ" },
-                    { input: "", expected: "" },
+                    { input: "hello", expected: "olleh" }, { input: "world", expected: "dlrow" },
+                    { input: "JavaScript", expected: "tpircSavaJ" }, { input: "", expected: "" },
                     { input: "a", expected: "a" }
                 ],
                 hint: "Consider using string methods like split(), reverse(), and join(), or iterate through the string."
             },
-            { // Level 2 (placeholder)
+            { 
                 title: "Mission: Array Summation",
                 brief: "Calculate the sum of elements in a data array.",
-                problem: "Write a function `sumArray(arr)` that returns the sum of all numbers in an array.",
+                problem: "Write a function `sumArray(arr)` that returns the sum of all numbers in an array `arr`.",
                 template: `function sumArray(arr) {\n  // Your code here\n\n  return 0;\n}`,
-                testCases: [ { input: [1,2,3], expected: 6}, {input: [10, -2, 5], expected: 13} ],
+                testCases: [ { input: [1,2,3], expected: 6}, {input: [10, -2, 5], expected: 13}, {input: [], expected: 0} ],
                 hint: "A loop or the reduce() method can be helpful here."
             }
-            // Add more levels here...
         ];
 
-        // --- Authentication Logic ---
         window.toggleAuthView = (showLogin) => {
             loginView.classList.toggle('hidden', !showLogin);
             registerView.classList.toggle('hidden', showLogin);
@@ -558,12 +587,14 @@
             const email = loginEmailInput.value;
             const password = loginPasswordInput.value;
             loginMessage.textContent = 'Attempting login...';
+            loginMessage.classList.remove('success', 'error');
             try {
                 await signInWithEmailAndPassword(auth, email, password);
                 loginMessage.textContent = 'Login successful! Initializing system...';
-                // Auth state change will handle UI update
+                loginMessage.classList.add('success');
             } catch (error) {
-                loginMessage.textContent = `Error: ${error.code} - ${error.message}`;
+                loginMessage.textContent = `Error: ${error.message} (${error.code})`;
+                loginMessage.classList.add('error');
                 console.error("Login error:", error);
             }
         });
@@ -573,22 +604,27 @@
             const password = registerPasswordInput.value;
             const confirmPassword = registerConfirmPasswordInput.value;
             registerMessage.textContent = 'Processing registration...';
+            registerMessage.classList.remove('success', 'error');
 
             if (password !== confirmPassword) {
                 registerMessage.textContent = 'Passwords do not match.';
+                registerMessage.classList.add('error');
                 return;
             }
             if (password.length < 6) {
                  registerMessage.textContent = 'Password should be at least 6 characters.';
+                 registerMessage.classList.add('error');
                 return;
             }
 
             try {
                 await createUserWithEmailAndPassword(auth, email, password);
                 registerMessage.textContent = 'Registration successful! Please login.';
+                registerMessage.classList.add('success');
                 toggleAuthView(true);
             } catch (error) {
-                registerMessage.textContent = `Error: ${error.code} - ${error.message}`;
+                registerMessage.textContent = `Error: ${error.message} (${error.code})`;
+                registerMessage.classList.add('error');
                 console.error("Registration error:", error);
             }
         });
@@ -596,7 +632,6 @@
         logoutButton.addEventListener('click', async () => {
             try {
                 await signOut(auth);
-                // Auth state change will handle UI update
             } catch (error) {
                 console.error("Logout error:", error);
                 alert("Error logging out.");
@@ -618,18 +653,15 @@
                 authContainer.classList.remove('hidden');
                 gameContainer.classList.add('hidden');
                 loadLocalProgress(); 
-                // No need to call loadLevel here, as game container is hidden.
-                // currentLevel will be set by loadLocalProgress for when user logs in next.
             }
         });
 
-        // --- Game Logic ---
         function loadLevel(levelIndex) {
             if (levelIndex >= levels.length) {
                 displayGameComplete();
                 return;
             }
-            currentLevel = levelIndex; // Ensure currentLevel is correctly set
+            currentLevel = levelIndex; 
             const levelData = levels[levelIndex];
             missionTitle.textContent = levelData.title;
             missionBrief.textContent = levelData.brief;
@@ -638,41 +670,40 @@
             outputArea.textContent = 'Awaiting execution...';
             codeFeedback.textContent = 'No feedback yet.';
             nextLevelButton.classList.add('hidden');
-            allTestsPassedLastSubmission = false; // Reset for new level
+            allTestsPassedLastSubmission = false; 
             startTimer(180); 
         }
         
         submitCodeButton.addEventListener('click', () => {
             const userCode = codeEditor.value;
             const levelData = levels[currentLevel];
-            allTestsPassedLastSubmission = true; // Assume true, set to false on any failure
+            allTestsPassedLastSubmission = true; 
             let resultsLog = `Executing for Mission: ${levelData.title}\n\n`;
             
             stopTimer();
 
             try {
-                const fnNameMatch = levelData.problem.match(/`(\w+)`/); // Look for function name in backticks
-                if (!fnNameMatch || !fnNameMatch[1]) {
-                     fnNameMatch = levelData.problem.match(/function\s+(\w+)\s*\(/); // Fallback for "function funcName ("
+                let functionName;
+                const fnNameMatchBackticks = levelData.problem.match(/`(\w+)`/);
+                const fnNameMatchFunctionKeyword = levelData.problem.match(/function\s+(\w+)\s*\(/);
+
+                if (fnNameMatchBackticks && fnNameMatchBackticks[1]) {
+                    functionName = fnNameMatchBackticks[1];
+                } else if (fnNameMatchFunctionKeyword && fnNameMatchFunctionKeyword[1]) {
+                    functionName = fnNameMatchFunctionKeyword[1];
+                } else {
+                    throw new Error("Could not determine function name from problem description. Expected format: `yourFunction` or `function yourFunction(...)`.");
                 }
-                if (!fnNameMatch || !fnNameMatch[1]) {
-                    throw new Error("Could not determine function name from problem description. Ensure it's like `myFunction` or `function myFunction(...){}`.");
-                }
-                const functionName = fnNameMatch[1];
                 
-                const scriptToRun = userCode + `\nif (typeof ${functionName} !== 'undefined') return ${functionName}; else throw new Error("Function ${functionName} is not defined or returned correctly.");`;
+                const scriptToRun = userCode + `\nif (typeof ${functionName} === 'function') return ${functionName}; else throw new Error("Function ${functionName} is not defined or not a function.");`;
                 const userFunction = new Function(scriptToRun)();
                 
-                if (typeof userFunction !== 'function') {
-                    throw new Error(`Your code did not properly define or return the function "${functionName}".`);
-                }
-
                 levelData.testCases.forEach((test, index) => {
                     resultsLog += `Test Case ${index + 1}:\n`;
                     resultsLog += `Input: ${JSON.stringify(test.input)}\n`;
                     let actualOutput;
                     try {
-                        actualOutput = userFunction(test.input);
+                        actualOutput = userFunction(test.input); // Call the extracted function
                         resultsLog += `Actual Output: ${JSON.stringify(actualOutput)}\n`;
                         resultsLog += `Expected Output: ${JSON.stringify(test.expected)}\n`;
                         
@@ -683,13 +714,13 @@
                             allTestsPassedLastSubmission = false;
                         }
                     } catch (e) {
-                        resultsLog += `Runtime Error during test case ${index + 1} (${functionName}(${JSON.stringify(test.input)})) : ${e.message}\nStatus: FAILED\n\n`;
+                        resultsLog += `Runtime Error in Test Case ${index + 1} (${functionName}(${JSON.stringify(test.input)})) : ${e.message}\nStatus: FAILED\n\n`;
                         allTestsPassedLastSubmission = false;
                     }
                 });
 
             } catch (e) {
-                resultsLog = `Error in your code or setup:\n${e.message}\n\nEnsure your function is correctly defined and named as specified in the problem.`;
+                resultsLog = `Error in your code or setup:\n${e.message}\n\nEnsure your function is correctly defined and named as specified.`;
                 allTestsPassedLastSubmission = false;
             }
 
@@ -698,12 +729,12 @@
             if (allTestsPassedLastSubmission) {
                 codeFeedback.textContent = 'All test cases passed! Mission accomplished.';
                 showResultScreen(true, `Level ${currentLevel + 1} Cleared!`, 100, 180 - timeLeft, "Excellent");
-                updateUserProgress(currentLevel + 1); // Save progress (next level index)
-                if (currentLevel < levels.length -1) { // If not the last level
+                updateUserProgress(currentLevel + 1); 
+                if (currentLevel < levels.length -1) { 
                      nextLevelButton.classList.remove('hidden');
                      nextLevelButton.disabled = false;
                      nextLevelButton.textContent = "Proceed to Next Mission";
-                } else { // Last level completed
+                } else { 
                     nextLevelButton.textContent = "All Missions Complete!";
                     nextLevelButton.classList.remove('hidden');
                     nextLevelButton.disabled = true; 
@@ -717,33 +748,23 @@
 
         resetCodeButton.addEventListener('click', () => {
             if (confirm("Are you sure you want to reset your code for this level?")) {
-                loadLevel(currentLevel); // Reloads current level template and restarts timer
+                loadLevel(currentLevel); 
             }
         });
 
         hintButton.addEventListener('click', () => {
             const levelData = levels[currentLevel];
-            if (levelData.hint) {
-                codeFeedback.textContent = `Hint: ${levelData.hint}`;
-            } else {
-                codeFeedback.textContent = 'No hints available for this mission.';
-            }
+            codeFeedback.textContent = levelData.hint ? `Hint: ${levelData.hint}` : 'No hints available for this mission.';
         });
         
         nextLevelButton.addEventListener('click', () => {
-            // This button should only be visible if the current level was successfully completed.
-            // The updateUserProgress already saved the next level index.
-            // loadUserProgress will fetch this, then loadLevel will use it.
-            // So, we just need to trigger the load sequence.
             if (allTestsPassedLastSubmission && currentLevel < levels.length - 1) {
-                loadLevel(currentLevel + 1); // Directly load next level
-            } else if (currentLevel >= levels.length - 1) {
+                loadLevel(currentLevel + 1); 
+            } else if (currentLevel >= levels.length - 1 && allTestsPassedLastSubmission) { // Check allTestsPassed for game complete
                  displayGameComplete();
             }
         });
 
-
-        // --- Timer Logic ---
         function startTimer(duration) {
             timeLeft = duration;
             clearInterval(levelTimerInterval); 
@@ -773,7 +794,6 @@
             timeDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         }
 
-        // --- User Progress (Firebase & LocalStorage) ---
         async function loadUserProgress() {
             let levelToLoad = 0;
             if (currentUser) {
@@ -791,36 +811,33 @@
                     levelToLoad = JSON.parse(savedProgress).level || 0;
                 }
             }
-            currentLevel = (levelToLoad < levels.length) ? levelToLoad : 0; // Ensure level is within bounds
+            currentLevel = (levelToLoad < levels.length && levelToLoad >= 0) ? levelToLoad : 0;
         }
 
-        async function updateUserProgress(completedLevelIndex) {
-            // Progress stores the index of the *next* level the user should start.
-            // So if level 0 (index) is completed, progress is 1.
-            const newProgressLevel = completedLevelIndex; 
+        async function updateUserProgress(completedLevelNumber) { // completedLevelNumber is 1-based for user display, or next level index
+            const newProgressLevelIndex = completedLevelNumber; // This means the *next* level index user should be on
 
             if (currentUser) {
                 try {
                     await set(ref(database, `users/${currentUser.uid}/progress`), {
-                        level: newProgressLevel,
+                        level: newProgressLevelIndex,
                         lastPlayed: new Date().toISOString()
                     });
                 } catch (error) {
                     console.error("Error saving user progress:", error);
                 }
             } else {
-                localStorage.setItem('codeVeritasProgress', JSON.stringify({ level: newProgressLevel }));
+                localStorage.setItem('codeVeritasProgress', JSON.stringify({ level: newProgressLevelIndex }));
             }
         }
         
-        function loadLocalProgress() { // Only used when user logs out or is not logged in initially
+        function loadLocalProgress() { 
             const savedProgress = localStorage.getItem('codeVeritasProgress');
+            let levelToLoad = 0;
             if (savedProgress) {
-                currentLevel = JSON.parse(savedProgress).level || 0;
-                 currentLevel = (currentLevel < levels.length) ? currentLevel : 0; // Ensure valid
-            } else {
-                currentLevel = 0;
+                levelToLoad = JSON.parse(savedProgress).level || 0;
             }
+            currentLevel = (levelToLoad < levels.length && levelToLoad >=0) ? levelToLoad : 0;
         }
 
         function displayGameComplete() {
@@ -839,7 +856,6 @@
             stopTimer();
         }
         
-        // --- Result Screen Logic ---
         function showResultScreen(success, message, score, timeTaken, quality) {
             resultTitle.textContent = success ? "MISSION SUCCESSFUL" : "MISSION FAILED";
             resultTitle.style.color = success ? 'var(--success-color)' : 'var(--error-color)';
@@ -853,70 +869,46 @@
 
         closeResultModalButton.addEventListener('click', () => {
             resultModal.classList.add('hidden');
-            if (!allTestsPassedLastSubmission) { // If failed
-                if (timeLeft <= 0) { // if time ran out, reset level by reloading it
+            if (!allTestsPassedLastSubmission) { 
+                if (timeLeft <= 0) { 
                     loadLevel(currentLevel);
-                } else { // if failed by submission, re-enable submit button
+                } else { 
                     submitCodeButton.disabled = false; 
                 }
             }
-            // If successful, the "Proceed to Next Mission" button handles moving forward.
-            // Or if it was the last level, game complete screen is shown.
         });
 
-
-        // --- Matrix Rain Effect ---
         const canvas = document.getElementById('matrix-canvas');
         const ctx = canvas.getContext('2d');
-
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-
-        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789@#$%^&*()*&^%?<>{}[]|';
-        const fontSize = 12;
-        let columns = Math.floor(canvas.width / fontSize); // Use Math.floor
+        const letters = '0123456789ABCDEF'; // Hex characters for a more "binary" matrix feel
+        const fontSize = 14;
+        let columns = Math.floor(canvas.width / fontSize); 
         const drops = [];
-
-        for (let x = 0; x < columns; x++) {
-            drops[x] = 1 + Math.floor(Math.random() * (canvas.height / fontSize)); // Randomize initial position
-        }
+        for (let x = 0; x < columns; x++) drops[x] = 1 + Math.floor(Math.random() * (canvas.height / fontSize));
 
         function drawMatrix() {
-            ctx.fillStyle = 'rgba(10, 10, 10, 0.04)'; 
+            ctx.fillStyle = 'rgba(10, 10, 10, 0.05)'; 
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
             ctx.fillStyle = 'rgba(0, 255, 65, 0.7)'; 
-            ctx.font = fontSize + 'px Courier New';
-
+            ctx.font = fontSize + 'px monospace'; // Use monospace for consistent char width
             for (let i = 0; i < drops.length; i++) {
                 const text = letters[Math.floor(Math.random() * letters.length)];
                 ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
-                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) { // Reset drop
-                    drops[i] = 0;
-                }
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
                 drops[i]++;
             }
         }
-        
-        let matrixInterval = setInterval(drawMatrix, 45); 
+        let matrixInterval = setInterval(drawMatrix, 50); 
 
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            columns = Math.floor(canvas.width / fontSize); // Recalculate columns
-            drops.length = 0; // Clear old drops array
-             for (let x = 0; x < columns; x++) { // Reinitialize drops for new column count
-                drops[x] = 1 + Math.floor(Math.random() * (canvas.height / fontSize) );
-            }
-            // No need to clear and restart interval if drawMatrix uses dynamic canvas.width/height
-            // But if columns count changed, drops array needs update
+            columns = Math.floor(canvas.width / fontSize); 
+            drops.length = 0; 
+             for (let x = 0; x < columns; x++) drops[x] = 1 + Math.floor(Math.random() * (canvas.height / fontSize) );
         });
-
-
-        // Initial Load: onAuthStateChanged handles the main logic for view and data loading.
-        // If no user is signed in initially, loadLocalProgress is called by onAuthStateChanged's else block.
-
     </script>
 </body>
 </html>
