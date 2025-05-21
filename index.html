@@ -235,7 +235,6 @@
             cursor: pointer;
         }
 
-
         /* --- Result Screen (Modal) --- */
         #result-modal {
             position: fixed;
@@ -339,7 +338,6 @@
                 width: 85%;
             }
         }
-
     </style>
 </head>
 <body>
@@ -458,15 +456,15 @@
             update
         } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-        // IMPORTANT: Replace with your actual Firebase configuration
+        // Your web app's Firebase configuration
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY", // Replace
-            authDomain: "YOUR_AUTH_DOMAIN", // Replace
-            databaseURL: "YOUR_DATABASE_URL", // Replace
-            projectId: "YOUR_PROJECT_ID", // Replace
-            storageBucket: "YOUR_STORAGE_BUCKET", // Replace
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // Replace
-            appId: "YOUR_APP_ID" // Replace
+            apiKey: "AIzaSyDhLuMymmJPkmMQKvYX8Ma94VAG-uf1kOk",
+            authDomain: "test-463d2.firebaseapp.com",
+            databaseURL: "https://test-463d2-default-rtdb.firebaseio.com",
+            projectId: "test-463d2",
+            storageBucket: "test-463d2.firebasestorage.app",
+            messagingSenderId: "793933331185",
+            appId: "1:793933331185:web:304e16633345f88fc7c750"
         };
 
         // Initialize Firebase
@@ -534,7 +532,6 @@
                 ],
                 hint: "Consider using string methods like split(), reverse(), and join(), or iterate through the string."
             },
-            // Add more levels here...
             { // Level 2 (placeholder)
                 title: "Mission: Array Summation",
                 brief: "Calculate the sum of elements in a data array.",
@@ -585,7 +582,6 @@
             try {
                 await createUserWithEmailAndPassword(auth, email, password);
                 registerMessage.textContent = 'Registration successful! Please login.';
-                // Optionally auto-login or switch to login view
                 toggleAuthView(true);
             } catch (error) {
                 registerMessage.textContent = `Error: ${error.message}`;
@@ -596,7 +592,6 @@
         logoutButton.addEventListener('click', async () => {
             try {
                 await signOut(auth);
-                // Auth state change will handle UI update
             } catch (error) {
                 console.error("Logout error:", error);
                 alert("Error logging out.");
@@ -610,17 +605,15 @@
                 userInfoDisplay.classList.remove('hidden');
                 authContainer.classList.add('hidden');
                 gameContainer.classList.remove('hidden');
-                await loadUserProgress(); // Load progress from Firebase
+                await loadUserProgress();
                 loadLevel(currentLevel);
             } else {
                 currentUser = null;
                 userInfoDisplay.classList.add('hidden');
                 authContainer.classList.remove('hidden');
                 gameContainer.classList.add('hidden');
-                currentLevel = 0; // Reset level or load from localStorage
+                currentLevel = 0;
                 loadLocalProgress();
-                // If game was visible, might want to explicitly hide and show auth
-                // For simplicity, current setup just toggles visibility
             }
         });
 
@@ -638,7 +631,7 @@
             outputArea.textContent = 'Awaiting execution...';
             codeFeedback.textContent = 'No feedback yet.';
             nextLevelButton.classList.add('hidden');
-            startTimer(180); // Reset timer for each level (e.g., 180 seconds)
+            startTimer(180);
         }
 
         submitCodeButton.addEventListener('click', () => {
@@ -647,15 +640,20 @@
             let allTestsPassed = true;
             let resultsLog = `Executing for Mission: ${levelData.title}\n\n`;
             
-            stopTimer(); // Stop timer on submission
+            stopTimer();
 
             try {
-                // This is a simplified execution context. Be wary of `new Function` with arbitrary user code in production.
-                // For this game, it's contained.
-                const userFunction = new Function('return ' + userCode)(); // Attempt to get the function object
+                const fnNameMatch = levelData.problem.match(/function\s+(\w+)\s*\(/);
+                if (!fnNameMatch || !fnNameMatch[1]) {
+                    throw new Error("Could not determine function name from problem description.");
+                }
+                const functionName = fnNameMatch[1];
+                
+                const scriptToRun = userCode + `\nreturn ${functionName};`;
+                const userFunction = new Function(scriptToRun)();
                 
                 if (typeof userFunction !== 'function') {
-                    throw new Error("Your code did not define a callable function as expected. Ensure your main function is returned or defined correctly.");
+                    throw new Error(`Your code did not properly define or return the function "${functionName}".`);
                 }
 
                 levelData.testCases.forEach((test, index) => {
@@ -664,11 +662,10 @@
                     let actualOutput;
                     let testPassed = false;
                     try {
-                        actualOutput = userFunction(test.input); // Assumes function name matches the one in problem
+                        actualOutput = userFunction(test.input);
                         resultsLog += `Actual Output: ${JSON.stringify(actualOutput)}\n`;
                         resultsLog += `Expected Output: ${JSON.stringify(test.expected)}\n`;
                         
-                        // Basic equality check, can be improved for objects/arrays
                         if (JSON.stringify(actualOutput) === JSON.stringify(test.expected)) {
                             testPassed = true;
                             resultsLog += `Status: PASSED\n\n`;
@@ -678,34 +675,35 @@
                             allTestsPassed = false;
                         }
                     } catch (e) {
-                        resultsLog += `Runtime Error: ${e.message}\nStatus: FAILED\n\n`;
+                        resultsLog += `Runtime Error during test: ${e.message}\nStatus: FAILED\n\n`;
                         allTestsPassed = false;
                     }
                 });
 
             } catch (e) {
-                resultsLog = `Compilation/Syntax Error:\n${e.message}\n\nCheck your function definition and syntax.`;
+                resultsLog = `Error in your code or setup:\n${e.message}\n\nEnsure your function is named "${levels[currentLevel].problem.match(/`(\w+)`/)[1]}" and correctly defined.`;
                 allTestsPassed = false;
             }
 
             outputArea.textContent = resultsLog;
 
-            // Basic Feedback (placeholder for advanced analysis)
             if (allTestsPassed) {
-                codeFeedback.textContent = 'All test cases passed! Excellent work, Agent.';
-                // Show result screen
-                showResultScreen(true, `Level ${currentLevel + 1} Cleared!`, 100, 180 - timeLeft, "Good");
+                codeFeedback.textContent = 'All test cases passed! Mission accomplished.';
+                showResultScreen(true, `Level ${currentLevel + 1} Cleared!`, 100, 180 - timeLeft, "Excellent");
                 if (currentLevel < levels.length -1) {
                      nextLevelButton.classList.remove('hidden');
+                     nextLevelButton.disabled = false;
+                     nextLevelButton.textContent = "Proceed to Next Mission";
                 } else {
                     nextLevelButton.textContent = "All Missions Complete!";
                     nextLevelButton.classList.remove('hidden');
                     nextLevelButton.disabled = true;
                 }
-                updateUserProgress(currentLevel + 1); // Mark level as completed
+                updateUserProgress(currentLevel + 1);
             } else {
-                codeFeedback.textContent = 'Some test cases failed. Review your logic and the output.';
-                 showResultScreen(false, `Level ${currentLevel + 1} Failed`, 0, 180 - timeLeft, "Needs Improvement");
+                codeFeedback.textContent = 'Some test cases failed. Review your logic and the output logs.';
+                showResultScreen(false, `Level ${currentLevel + 1} Attempt Failed`, 0, 180 - timeLeft, "Needs Review");
+                nextLevelButton.classList.add('hidden');
             }
         });
 
@@ -725,7 +723,7 @@
         });
         
         nextLevelButton.addEventListener('click', () => {
-            if(allTestsPassedLastSubmission || !nextLevelButton.classList.contains('hidden')) { // Ensure previous level was cleared
+            if(allTestsPassedLastSubmission || !nextLevelButton.classList.contains('hidden')) {
                  currentLevel++;
                 if (currentLevel < levels.length) {
                     loadLevel(currentLevel);
@@ -735,14 +733,12 @@
             }
         });
         
-        let allTestsPassedLastSubmission = false; // Track if last submission was successful for enabling next level
+        let allTestsPassedLastSubmission = false;
 
-        // Overwrite submitCodeButton event listener to include this tracker
-        submitCodeButton.removeEventListener('click', () => {}); // Remove previous if any (idempotency)
         submitCodeButton.addEventListener('click', () => {
             const userCode = codeEditor.value;
             const levelData = levels[currentLevel];
-            allTestsPassedLastSubmission = true; // Assume true, set to false on any failure
+            allTestsPassedLastSubmission = true;
             let resultsLog = `Executing for Mission: ${levelData.title}\n\n`;
             
             stopTimer();
@@ -754,12 +750,6 @@
                 }
                 const functionName = fnNameMatch[1];
                 
-                // Create function: new Function ([arg1[, arg2[, ...argN]],] functionBody)
-                // User code needs to be the body, and we assume it defines the function `functionName`
-                // For more robust execution, it's better if user code *returns* the function:
-                // e.g. `return function ${functionName}(param) { ... }`
-                // For simplicity now, we expect the user to define the function, and we'll try to call it.
-                // A slightly safer approach for the current structure:
                 const scriptToRun = userCode + `\nreturn ${functionName};`;
                 const userFunction = new Function(scriptToRun)();
                 
@@ -805,11 +795,10 @@
                      nextLevelButton.classList.remove('hidden');
                      nextLevelButton.disabled = false;
                      nextLevelButton.textContent = "Proceed to Next Mission";
-
                 } else {
                     nextLevelButton.textContent = "All Missions Complete!";
                     nextLevelButton.classList.remove('hidden');
-                    nextLevelButton.disabled = true; // No more levels
+                    nextLevelButton.disabled = true;
                 }
                 updateUserProgress(currentLevel + 1);
             } else {
@@ -819,11 +808,10 @@
             }
         });
 
-
         // --- Timer Logic ---
         function startTimer(duration) {
             timeLeft = duration;
-            clearInterval(levelTimerInterval); // Clear any existing timer
+            clearInterval(levelTimerInterval);
             updateTimerDisplay();
             levelTimerInterval = setInterval(() => {
                 timeLeft--;
@@ -831,13 +819,12 @@
                 if (timeLeft <= 0) {
                     clearInterval(levelTimerInterval);
                     timeDisplay.textContent = "Time's Up!";
-                    // Handle time up (e.g., fail level, disable submit)
                     codeFeedback.textContent = "Time's up! Mission compromised. Try again faster.";
-                    submitCodeButton.disabled = true; // Disable submit
+                    submitCodeButton.disabled = true;
                     showResultScreen(false, `Level ${currentLevel + 1} Failed - Time Out`, 0, duration, "Time Out");
                 }
             }, 1000);
-            submitCodeButton.disabled = false; // Ensure submit is enabled when timer starts
+            submitCodeButton.disabled = false;
         }
 
         function stopTimer() {
@@ -858,11 +845,11 @@
                     if (snapshot.exists()) {
                         currentLevel = snapshot.val().level || 0;
                     } else {
-                        currentLevel = 0; // New user
+                        currentLevel = 0;
                     }
                 } catch (error) {
                     console.error("Error loading user progress:", error);
-                    currentLevel = 0; // Fallback
+                    currentLevel = 0;
                 }
             } else {
                 loadLocalProgress();
@@ -870,9 +857,7 @@
         }
 
         async function updateUserProgress(completedLevel) {
-             // We save the *next* level the user should be on, or how many levels they've completed
             const newProgressLevel = Math.max(currentLevel, completedLevel);
-
             if (currentUser) {
                 try {
                     await set(ref(database, `users/${currentUser.uid}/progress`), {
@@ -883,12 +868,10 @@
                     console.error("Error saving user progress:", error);
                 }
             } else {
-                // Save to local storage for non-logged-in users
                 localStorage.setItem('codeVeritasProgress', JSON.stringify({ level: newProgressLevel }));
             }
-             // Update local currentLevel to reflect this, especially if they just completed a level
             if (newProgressLevel > currentLevel) {
-                currentLevel = newProgressLevel -1; // If they completed level 0 (index), next is 1. So progress is 1. Stored currentLevel should be this for loading next.
+                currentLevel = newProgressLevel -1;
             }
         }
         
@@ -911,7 +894,7 @@
             hintButton.disabled = true;
             resetCodeButton.disabled = true;
             nextLevelButton.classList.add('hidden');
-            outputArea.textContent = "System Integrity: 100%\nAll Operations Successful."
+            outputArea.textContent = "System Integrity: 100%\nAll Operations Successful.";
             stopTimer();
         }
         
@@ -922,7 +905,7 @@
             resultMessage.textContent = message;
             scoreValue.textContent = score;
             timeValue.textContent = `${timeTaken}s`;
-            qualityValue.textContent = quality; // Placeholder for now
+            qualityValue.textContent = quality;
 
             resultModal.classList.remove('hidden');
         }
@@ -930,20 +913,16 @@
         closeResultModalButton.addEventListener('click', () => {
             resultModal.classList.add('hidden');
             if (allTestsPassedLastSubmission && currentLevel < levels.length -1) {
-                // If successful and more levels, automatically load next or wait for button
-                // For now, user clicks "Proceed to Next Mission"
             } else if (allTestsPassedLastSubmission && currentLevel >= levels.length -1) {
                  displayGameComplete();
             } else {
-                // If failed, reset timer and allow retry
-                if (timeLeft <=0) { // if time ran out, reset level
+                if (timeLeft <=0) {
                     loadLevel(currentLevel);
-                } else { // if failed by submission, keep timer running or stop for review
-                    submitCodeButton.disabled = false; // Re-enable submit if not time out
+                } else {
+                    submitCodeButton.disabled = false;
                 }
             }
         });
-
 
         // --- Matrix Rain Effect ---
         const canvas = document.getElementById('matrix-canvas');
@@ -962,10 +941,10 @@
         }
 
         function drawMatrix() {
-            ctx.fillStyle = 'rgba(10, 10, 10, 0.04)'; // Darker, more transparent for slower fade
+            ctx.fillStyle = 'rgba(10, 10, 10, 0.04)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            ctx.fillStyle = 'rgba(0, 255, 65, 0.7)'; // Neon green, slightly transparent
+            ctx.fillStyle = 'rgba(0, 255, 65, 0.7)';
             ctx.font = fontSize + 'px Courier New';
 
             for (let i = 0; i < drops.length; i++) {
@@ -979,34 +958,26 @@
             }
         }
         
-        let matrixInterval = setInterval(drawMatrix, 45); // Slower for performance
+        let matrixInterval = setInterval(drawMatrix, 45);
 
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            // Recalculate columns and reset drops if necessary
-            // For simplicity, this basic version might not perfectly adapt column count on resize without refresh
-            clearInterval(matrixInterval); // Stop old one
+            clearInterval(matrixInterval);
             const newColumns = canvas.width / fontSize;
-            drops.length = 0; // Clear old drops
+            drops.length = 0;
              for (let x = 0; x < newColumns; x++) {
-                drops[x] = 1 + Math.floor(Math.random() * (canvas.height / fontSize) ); // Randomize start
+                drops[x] = 1 + Math.floor(Math.random() * (canvas.height / fontSize) );
             }
-            matrixInterval = setInterval(drawMatrix, 45); // Restart with new settings
+            matrixInterval = setInterval(drawMatrix, 45);
         });
 
-
-        // Initial Load (check auth state which triggers game load or shows login)
-        // onAuthStateChanged handles the initial view.
-        // If not logged in, we might want to load level 0 from local storage.
         if (!currentUser) {
-             loadLocalProgress(); // Load progress from local storage if not logged in
-             if (authContainer.classList.contains('hidden')) { // if auth is hidden, means game should show (e.g. after a page refresh when already logged in)
-                 loadLevel(currentLevel); // load level based on local progress or 0
+             loadLocalProgress();
+             if (authContainer.classList.contains('hidden')) {
+                 loadLevel(currentLevel);
              }
         }
-
-
     </script>
 </body>
 </html>
