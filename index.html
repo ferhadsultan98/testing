@@ -1,110 +1,1012 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Gemini AI Chat</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: 'Inter', sans-serif;
-      background: #f3f4f6;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Veritas - Hacker Simulation</title>
+    <style>
+        /* CSS - Dark Matrix Theme & Styles */
+        :root {
+            --primary-color: #00FF41; /* Neon Green */
+            --background-color: #0A0A0A;
+            --text-color: #E0E0E0;
+            --container-bg: #1A1A1A;
+            --input-bg: #0F0F0F;
+            --border-color: #00FF41;
+            --error-color: #FF4136;
+            --success-color: #3D9970;
+            --glitch-color1: #FF00FF;
+            --glitch-color2: #00FFFF;
+        }
 
-    .container {
-      background: #fff;
-      padding: 2rem;
-      border-radius: 16px;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-      width: 90%;
-      max-width: 600px;
-    }
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            flex-direction: column;
+        }
 
-    h1 {
-      font-size: 24px;
-      margin-bottom: 1rem;
-      text-align: center;
-      color: #111827;
-    }
+        .hidden {
+            display: none !important;
+        }
 
-    textarea {
-      width: 100%;
-      padding: 1rem;
-      font-size: 16px;
-      border-radius: 8px;
-      border: 1px solid #d1d5db;
-      resize: vertical;
-    }
+        /* --- Login/Register Terminal --- */
+        #auth-container {
+            background-color: var(--container-bg);
+            padding: 30px 40px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 0 20px var(--border-color);
+            width: 350px;
+            text-align: center;
+            animation: fadeIn 1s ease-in-out;
+        }
 
-    button {
-      margin-top: 1rem;
-      width: 100%;
-      background: #2563eb;
-      color: white;
-      padding: 0.75rem;
-      font-size: 16px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
+        #auth-container h2 {
+            color: var(--primary-color);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 25px;
+            animation: textGlitch 5s infinite alternate;
+        }
 
-    button:hover {
-      background: #1e40af;
-    }
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
 
-    .response {
-      margin-top: 1.5rem;
-      background: #f9fafb;
-      padding: 1rem;
-      border-radius: 8px;
-      font-size: 15px;
-      white-space: pre-wrap;
-      color: #374151;
-      border: 1px solid #e5e7eb;
-      max-height: 300px;
-      overflow-y: auto;
-    }
-  </style>
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--primary-color);
+            font-size: 0.9em;
+        }
+
+        .input-group input {
+            width: calc(100% - 20px);
+            padding: 10px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--primary-color);
+            color: var(--text-color);
+            outline: none;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .input-group input:focus {
+            box-shadow: 0 0 10px var(--primary-color);
+        }
+
+        .auth-buttons button {
+            background-color: var(--primary-color);
+            color: var(--background-color);
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            cursor: pointer;
+            font-family: 'Courier New', Courier, monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: background-color 0.3s, color 0.3s, transform 0.2s;
+        }
+
+        .auth-buttons button:hover {
+            background-color: var(--text-color);
+            color: var(--background-color);
+            transform: scale(1.05);
+        }
+
+        #auth-message {
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+
+        .toggle-auth {
+            color: var(--primary-color);
+            cursor: pointer;
+            text-decoration: underline;
+            font-size: 0.9em;
+            display: block;
+            margin-top: 15px;
+        }
+        .toggle-auth:hover {
+            text-shadow: 0 0 5px var(--primary-color);
+        }
+
+        /* --- Game Container --- */
+        #game-container {
+            width: 90%;
+            max-width: 1000px;
+            background-color: var(--container-bg);
+            border: 1px solid var(--primary-color);
+            padding: 20px;
+            box-shadow: 0 0 15px var(--primary-color);
+            animation: fadeIn 0.5s ease-out;
+            position: relative; /* For absolute positioned elements like timer */
+        }
+
+        #mission-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #mission-title {
+            color: var(--primary-color);
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+
+        #mission-brief {
+            font-size: 0.9em;
+            color: var(--text-color);
+        }
+
+        .game-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px dashed rgba(0, 255, 65, 0.3);
+        }
+
+        .game-section h3 {
+            color: var(--primary-color);
+            margin-top: 0;
+            border-bottom: 1px solid var(--primary-color);
+            padding-bottom: 5px;
+        }
+
+        #code-editor {
+            width: calc(100% - 22px); /* Account for padding and border */
+            height: 250px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--primary-color);
+            color: var(--text-color);
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1em;
+            padding: 10px;
+            resize: vertical;
+        }
+
+        #code-editor:focus {
+            outline: none;
+            box-shadow: 0 0 10px var(--primary-color);
+        }
+
+        #output-section pre {
+            background-color: var(--input-bg);
+            padding: 10px;
+            border: 1px solid var(--primary-color);
+            min-height: 50px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: var(--text-color);
+        }
+
+        #game-controls button, #utility-controls button {
+            background-color: var(--primary-color);
+            color: var(--background-color);
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            cursor: pointer;
+            font-family: 'Courier New', Courier, monospace;
+            text-transform: uppercase;
+            transition: background-color 0.3s, color 0.3s, transform 0.2s;
+        }
+
+        #game-controls button:hover, #utility-controls button:hover {
+            background-color: var(--text-color);
+            color: var(--background-color);
+            transform: scale(1.05);
+        }
+
+        #timer-section {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.2em;
+            color: var(--primary-color);
+        }
+
+        #feedback-section p {
+            font-style: italic;
+        }
+
+        #user-info {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            font-size: 0.8em;
+            background: rgba(0,0,0,0.5);
+            padding: 5px 10px;
+            border-radius: 3px;
+            color: var(--primary-color);
+        }
+        #user-info button {
+            margin-left: 10px;
+            background: var(--primary-color);
+            color: var(--background-color);
+            border: none;
+            padding: 3px 6px;
+            cursor: pointer;
+        }
+
+
+        /* --- Result Screen (Modal) --- */
+        #result-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.5s;
+        }
+
+        #result-content {
+            background-color: var(--container-bg);
+            padding: 30px 40px;
+            border: 2px solid var(--primary-color);
+            box-shadow: 0 0 30px var(--primary-color);
+            width: 60%;
+            max-width: 600px;
+            text-align: center;
+            animation: slideInFromTop 0.5s;
+        }
+
+        #result-content h2 {
+            color: var(--primary-color);
+            font-size: 2em;
+            margin-bottom: 10px;
+            animation: textGlitch 4s infinite alternate;
+        }
+        #result-message { font-size: 1.2em; margin-bottom: 15px; }
+        #result-score, #result-time, #result-quality { margin-bottom: 10px; }
+        #result-content button {
+            margin-top: 20px;
+            background-color: var(--primary-color);
+            color: var(--background-color);
+            border: none;
+            padding: 12px 20px;
+            cursor: pointer;
+            font-family: 'Courier New', Courier, monospace;
+            text-transform: uppercase;
+            font-size: 1em;
+        }
+        #result-content button:hover {
+             background-color: var(--text-color);
+            color: var(--background-color);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideInFromTop {
+            from { opacity: 0; transform: translateY(-50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes textGlitch {
+            0% { text-shadow: 0 0 2px var(--primary-color); }
+            20% { text-shadow: 2px 2px 2px var(--glitch-color1), -2px -2px 2px var(--glitch-color2); }
+            22% { text-shadow: 0 0 2px var(--primary-color); }
+            60% { text-shadow: -2px 2px 2px var(--glitch-color2), 2px -2px 2px var(--glitch-color1); }
+            62% { text-shadow: 0 0 2px var(--primary-color); }
+            100% { text-shadow: 0 0 2px var(--primary-color); }
+        }
+
+        /* Matrix Rain Canvas (Optional but cool) */
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1; /* Behind all content */
+            opacity: 0.3; /* Adjust for subtlety */
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            #auth-container {
+                width: 85%;
+                padding: 20px;
+            }
+            #game-container {
+                width: 95%;
+                padding: 15px;
+            }
+            #code-editor {
+                height: 200px;
+            }
+            #timer-section {
+                position: static;
+                text-align: right;
+                margin-bottom: 10px;
+            }
+             #result-content {
+                width: 85%;
+            }
+        }
+
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Gemini AI Assistant</h1>
-    <textarea id="prompt" rows="6" placeholder="Bir şeyler yaz..."></textarea>
-    <button onclick="askGemini()">Cevapla</button>
-    <div class="response" id="result">Yanıt burada görünecek...</div>
-  </div>
+    <canvas id="matrix-canvas"></canvas>
 
-  <script>
-    async function askGemini() {
-      const prompt = document.getElementById('prompt').value;
-      const resultDiv = document.getElementById('result');
-      resultDiv.textContent = 'Yanıt alınıyor...';
+    <div id="user-info" class="hidden">
+        Logged in as: <span id="user-email-display"></span>
+        <button id="logout-button">Logout</button>
+    </div>
 
-      try {
-        const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyCOdjR0BEpjdsnNi9ENg35YNY8DSWa3Rkk', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }]
-          })
+    <div id="auth-container">
+        <div id="login-view">
+            <h2>System Access</h2>
+            <div class="input-group">
+                <label for="login-email">Email:</label>
+                <input type="email" id="login-email" required>
+            </div>
+            <div class="input-group">
+                <label for="login-password">Password:</label>
+                <input type="password" id="login-password" required>
+            </div>
+            <div class="auth-buttons">
+                <button id="login-button">Login</button>
+            </div>
+            <p id="login-message"></p>
+            <span class="toggle-auth" onclick="toggleAuthView(false)">Need an account? Register</span>
+        </div>
+
+        <div id="register-view" class="hidden">
+            <h2>New Agent Registration</h2>
+            <div class="input-group">
+                <label for="register-email">Email:</label>
+                <input type="email" id="register-email" required>
+            </div>
+            <div class="input-group">
+                <label for="register-password">Password:</label>
+                <input type="password" id="register-password" required>
+            </div>
+             <div class="input-group">
+                <label for="register-confirm-password">Confirm Password:</label>
+                <input type="password" id="register-confirm-password" required>
+            </div>
+            <div class="auth-buttons">
+                <button id="register-button">Register</button>
+            </div>
+            <p id="register-message"></p>
+            <span class="toggle-auth" onclick="toggleAuthView(true)">Already have access? Login</span>
+        </div>
+    </div>
+
+    <div id="game-container" class="hidden">
+        <div id="timer-section">Time Left: <span id="time-display">03:00</span></div>
+        
+        <div id="mission-header">
+            <h2 id="mission-title">Mission: Null Pointer</h2>
+            <p id="mission-brief">Initializing first challenge...</p>
+        </div>
+
+        <div class="game-section" id="problem-description-section">
+            <h3>Problem Description</h3>
+            <p id="problem-text"></p>
+        </div>
+
+        <div class="game-section" id="code-editor-section">
+            <h3>Code Editor</h3>
+            <textarea id="code-editor" placeholder="Enter your JavaScript code here..."></textarea>
+        </div>
+
+        <div class="game-section" id="output-section">
+            <h3>Output / Test Results</h3>
+            <pre id="output-area">Awaiting execution...</pre>
+        </div>
+
+        <div class="game-section" id="feedback-section">
+            <h3>Intel & Feedback</h3>
+            <p id="code-feedback">No feedback yet. Compile and run your code.</p>
+        </div>
+        
+        <div id="game-controls" style="text-align: center;">
+            <button id="submit-code-button">Execute & Submit</button>
+            <button id="reset-code-button">Reset Code</button>
+            <button id="hint-button">Request Hint</button>
+        </div>
+         <div id="utility-controls" style="text-align: right; margin-top:10px;">
+            <button id="next-level-button" class="hidden">Proceed to Next Mission</button>
+        </div>
+    </div>
+
+    <div id="result-modal" class="hidden">
+        <div id="result-content">
+            <h2 id="result-title">Mission Result</h2>
+            <p id="result-message"></p>
+            <p id="result-score">Score: <span id="score-value">0</span></p>
+            <p id="result-time">Time Used: <span id="time-value">0s</span></p>
+            <p id="result-quality">Code Quality: <span id="quality-value">Pending</span></p>
+            <button id="close-result-modal-button">Acknowledge</button>
+        </div>
+    </div>
+
+    <script type="module">
+        // Firebase SDK imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { 
+            getAuth, 
+            createUserWithEmailAndPassword, 
+            signInWithEmailAndPassword, 
+            onAuthStateChanged, 
+            signOut 
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { 
+            getDatabase, 
+            ref, 
+            set, 
+            get,
+            child,
+            update
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+        // IMPORTANT: Replace with your actual Firebase configuration
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY", // Replace
+            authDomain: "YOUR_AUTH_DOMAIN", // Replace
+            databaseURL: "YOUR_DATABASE_URL", // Replace
+            projectId: "YOUR_PROJECT_ID", // Replace
+            storageBucket: "YOUR_STORAGE_BUCKET", // Replace
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // Replace
+            appId: "YOUR_APP_ID" // Replace
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const database = getDatabase(app);
+
+        // DOM Elements
+        const authContainer = document.getElementById('auth-container');
+        const gameContainer = document.getElementById('game-container');
+        const loginView = document.getElementById('login-view');
+        const registerView = document.getElementById('register-view');
+        const loginButton = document.getElementById('login-button');
+        const registerButton = document.getElementById('register-button');
+        const logoutButton = document.getElementById('logout-button');
+        const loginEmailInput = document.getElementById('login-email');
+        const loginPasswordInput = document.getElementById('login-password');
+        const registerEmailInput = document.getElementById('register-email');
+        const registerPasswordInput = document.getElementById('register-password');
+        const registerConfirmPasswordInput = document.getElementById('register-confirm-password');
+        const loginMessage = document.getElementById('login-message');
+        const registerMessage = document.getElementById('register-message');
+        const userInfoDisplay = document.getElementById('user-info');
+        const userEmailDisplay = document.getElementById('user-email-display');
+
+        const missionTitle = document.getElementById('mission-title');
+        const missionBrief = document.getElementById('mission-brief');
+        const problemText = document.getElementById('problem-text');
+        const codeEditor = document.getElementById('code-editor');
+        const outputArea = document.getElementById('output-area');
+        const codeFeedback = document.getElementById('code-feedback');
+        const submitCodeButton = document.getElementById('submit-code-button');
+        const resetCodeButton = document.getElementById('reset-code-button');
+        const hintButton = document.getElementById('hint-button');
+        const nextLevelButton = document.getElementById('next-level-button');
+        
+        const timeDisplay = document.getElementById('time-display');
+        
+        const resultModal = document.getElementById('result-modal');
+        const resultTitle = document.getElementById('result-title');
+        const resultMessage = document.getElementById('result-message');
+        const scoreValue = document.getElementById('score-value');
+        const timeValue = document.getElementById('time-value');
+        const qualityValue = document.getElementById('quality-value');
+        const closeResultModalButton = document.getElementById('close-result-modal-button');
+
+        let currentUser = null;
+        let currentLevel = 0;
+        let levelTimerInterval;
+        let timeLeft = 180; // 3 minutes per level initially
+
+        // --- Game Levels Data ---
+        const levels = [
+            { // Level 1
+                title: "Mission: String Reversal Protocol",
+                brief: "A critical data packet has been intercepted in reverse order. We need you to write a script to flip it back.",
+                problem: "Write a JavaScript function called `reverseString` that takes one argument, a string, and returns that string reversed.",
+                template: `function reverseString(str) {\n  // Your code here\n\n  return "";\n}`,
+                testCases: [
+                    { input: "hello", expected: "olleh" },
+                    { input: "world", expected: "dlrow" },
+                    { input: "JavaScript", expected: "tpircSavaJ" },
+                    { input: "", expected: "" },
+                    { input: "a", expected: "a" }
+                ],
+                hint: "Consider using string methods like split(), reverse(), and join(), or iterate through the string."
+            },
+            // Add more levels here...
+            { // Level 2 (placeholder)
+                title: "Mission: Array Summation",
+                brief: "Calculate the sum of elements in a data array.",
+                problem: "Write a function `sumArray(arr)` that returns the sum of all numbers in an array.",
+                template: `function sumArray(arr) {\n  // Your code here\n\n  return 0;\n}`,
+                testCases: [ { input: [1,2,3], expected: 6}, {input: [10, -2, 5], expected: 13} ],
+                hint: "A loop or the reduce() method can be helpful here."
+            }
+        ];
+
+        // --- Authentication Logic ---
+        window.toggleAuthView = (showLogin) => {
+            loginView.classList.toggle('hidden', !showLogin);
+            registerView.classList.toggle('hidden', showLogin);
+            loginMessage.textContent = '';
+            registerMessage.textContent = '';
+        };
+
+        loginButton.addEventListener('click', async () => {
+            const email = loginEmailInput.value;
+            const password = loginPasswordInput.value;
+            loginMessage.textContent = 'Attempting login...';
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                loginMessage.textContent = 'Login successful! Initializing system...';
+                // Auth state change will handle UI update
+            } catch (error) {
+                loginMessage.textContent = `Error: ${error.message}`;
+                console.error("Login error:", error);
+            }
         });
 
-        const data = await response.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Yanıt alınamadı.';
-        resultDiv.textContent = text;
-      } catch (error) {
-        resultDiv.textContent = 'Hata oluştu: ' + error.message;
-      }
-    }
-  </script>
+        registerButton.addEventListener('click', async () => {
+            const email = registerEmailInput.value;
+            const password = registerPasswordInput.value;
+            const confirmPassword = registerConfirmPasswordInput.value;
+            registerMessage.textContent = 'Processing registration...';
+
+            if (password !== confirmPassword) {
+                registerMessage.textContent = 'Passwords do not match.';
+                return;
+            }
+            if (password.length < 6) {
+                 registerMessage.textContent = 'Password should be at least 6 characters.';
+                return;
+            }
+
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+                registerMessage.textContent = 'Registration successful! Please login.';
+                // Optionally auto-login or switch to login view
+                toggleAuthView(true);
+            } catch (error) {
+                registerMessage.textContent = `Error: ${error.message}`;
+                console.error("Registration error:", error);
+            }
+        });
+
+        logoutButton.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                // Auth state change will handle UI update
+            } catch (error) {
+                console.error("Logout error:", error);
+                alert("Error logging out.");
+            }
+        });
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                userEmailDisplay.textContent = user.email;
+                userInfoDisplay.classList.remove('hidden');
+                authContainer.classList.add('hidden');
+                gameContainer.classList.remove('hidden');
+                await loadUserProgress(); // Load progress from Firebase
+                loadLevel(currentLevel);
+            } else {
+                currentUser = null;
+                userInfoDisplay.classList.add('hidden');
+                authContainer.classList.remove('hidden');
+                gameContainer.classList.add('hidden');
+                currentLevel = 0; // Reset level or load from localStorage
+                loadLocalProgress();
+                // If game was visible, might want to explicitly hide and show auth
+                // For simplicity, current setup just toggles visibility
+            }
+        });
+
+        // --- Game Logic ---
+        function loadLevel(levelIndex) {
+            if (levelIndex >= levels.length) {
+                displayGameComplete();
+                return;
+            }
+            const levelData = levels[levelIndex];
+            missionTitle.textContent = levelData.title;
+            missionBrief.textContent = levelData.brief;
+            problemText.textContent = levelData.problem;
+            codeEditor.value = levelData.template;
+            outputArea.textContent = 'Awaiting execution...';
+            codeFeedback.textContent = 'No feedback yet.';
+            nextLevelButton.classList.add('hidden');
+            startTimer(180); // Reset timer for each level (e.g., 180 seconds)
+        }
+
+        submitCodeButton.addEventListener('click', () => {
+            const userCode = codeEditor.value;
+            const levelData = levels[currentLevel];
+            let allTestsPassed = true;
+            let resultsLog = `Executing for Mission: ${levelData.title}\n\n`;
+            
+            stopTimer(); // Stop timer on submission
+
+            try {
+                // This is a simplified execution context. Be wary of `new Function` with arbitrary user code in production.
+                // For this game, it's contained.
+                const userFunction = new Function('return ' + userCode)(); // Attempt to get the function object
+                
+                if (typeof userFunction !== 'function') {
+                    throw new Error("Your code did not define a callable function as expected. Ensure your main function is returned or defined correctly.");
+                }
+
+                levelData.testCases.forEach((test, index) => {
+                    resultsLog += `Test Case ${index + 1}:\n`;
+                    resultsLog += `Input: ${JSON.stringify(test.input)}\n`;
+                    let actualOutput;
+                    let testPassed = false;
+                    try {
+                        actualOutput = userFunction(test.input); // Assumes function name matches the one in problem
+                        resultsLog += `Actual Output: ${JSON.stringify(actualOutput)}\n`;
+                        resultsLog += `Expected Output: ${JSON.stringify(test.expected)}\n`;
+                        
+                        // Basic equality check, can be improved for objects/arrays
+                        if (JSON.stringify(actualOutput) === JSON.stringify(test.expected)) {
+                            testPassed = true;
+                            resultsLog += `Status: PASSED\n\n`;
+                        } else {
+                            testPassed = false;
+                            resultsLog += `Status: FAILED\n\n`;
+                            allTestsPassed = false;
+                        }
+                    } catch (e) {
+                        resultsLog += `Runtime Error: ${e.message}\nStatus: FAILED\n\n`;
+                        allTestsPassed = false;
+                    }
+                });
+
+            } catch (e) {
+                resultsLog = `Compilation/Syntax Error:\n${e.message}\n\nCheck your function definition and syntax.`;
+                allTestsPassed = false;
+            }
+
+            outputArea.textContent = resultsLog;
+
+            // Basic Feedback (placeholder for advanced analysis)
+            if (allTestsPassed) {
+                codeFeedback.textContent = 'All test cases passed! Excellent work, Agent.';
+                // Show result screen
+                showResultScreen(true, `Level ${currentLevel + 1} Cleared!`, 100, 180 - timeLeft, "Good");
+                if (currentLevel < levels.length -1) {
+                     nextLevelButton.classList.remove('hidden');
+                } else {
+                    nextLevelButton.textContent = "All Missions Complete!";
+                    nextLevelButton.classList.remove('hidden');
+                    nextLevelButton.disabled = true;
+                }
+                updateUserProgress(currentLevel + 1); // Mark level as completed
+            } else {
+                codeFeedback.textContent = 'Some test cases failed. Review your logic and the output.';
+                 showResultScreen(false, `Level ${currentLevel + 1} Failed`, 0, 180 - timeLeft, "Needs Improvement");
+            }
+        });
+
+        resetCodeButton.addEventListener('click', () => {
+            if (confirm("Are you sure you want to reset your code for this level?")) {
+                loadLevel(currentLevel);
+            }
+        });
+
+        hintButton.addEventListener('click', () => {
+            const levelData = levels[currentLevel];
+            if (levelData.hint) {
+                codeFeedback.textContent = `Hint: ${levelData.hint}`;
+            } else {
+                codeFeedback.textContent = 'No hints available for this mission.';
+            }
+        });
+        
+        nextLevelButton.addEventListener('click', () => {
+            if(allTestsPassedLastSubmission || !nextLevelButton.classList.contains('hidden')) { // Ensure previous level was cleared
+                 currentLevel++;
+                if (currentLevel < levels.length) {
+                    loadLevel(currentLevel);
+                } else {
+                    displayGameComplete();
+                }
+            }
+        });
+        
+        let allTestsPassedLastSubmission = false; // Track if last submission was successful for enabling next level
+
+        // Overwrite submitCodeButton event listener to include this tracker
+        submitCodeButton.removeEventListener('click', () => {}); // Remove previous if any (idempotency)
+        submitCodeButton.addEventListener('click', () => {
+            const userCode = codeEditor.value;
+            const levelData = levels[currentLevel];
+            allTestsPassedLastSubmission = true; // Assume true, set to false on any failure
+            let resultsLog = `Executing for Mission: ${levelData.title}\n\n`;
+            
+            stopTimer();
+
+            try {
+                const fnNameMatch = levelData.problem.match(/function\s+(\w+)\s*\(/);
+                if (!fnNameMatch || !fnNameMatch[1]) {
+                    throw new Error("Could not determine function name from problem description.");
+                }
+                const functionName = fnNameMatch[1];
+                
+                // Create function: new Function ([arg1[, arg2[, ...argN]],] functionBody)
+                // User code needs to be the body, and we assume it defines the function `functionName`
+                // For more robust execution, it's better if user code *returns* the function:
+                // e.g. `return function ${functionName}(param) { ... }`
+                // For simplicity now, we expect the user to define the function, and we'll try to call it.
+                // A slightly safer approach for the current structure:
+                const scriptToRun = userCode + `\nreturn ${functionName};`;
+                const userFunction = new Function(scriptToRun)();
+                
+                if (typeof userFunction !== 'function') {
+                    throw new Error(`Your code did not properly define or return the function "${functionName}".`);
+                }
+
+                levelData.testCases.forEach((test, index) => {
+                    resultsLog += `Test Case ${index + 1}:\n`;
+                    resultsLog += `Input: ${JSON.stringify(test.input)}\n`;
+                    let actualOutput;
+                    let testPassed = false;
+                    try {
+                        actualOutput = userFunction(test.input);
+                        resultsLog += `Actual Output: ${JSON.stringify(actualOutput)}\n`;
+                        resultsLog += `Expected Output: ${JSON.stringify(test.expected)}\n`;
+                        
+                        if (JSON.stringify(actualOutput) === JSON.stringify(test.expected)) {
+                            testPassed = true;
+                            resultsLog += `Status: PASSED\n\n`;
+                        } else {
+                            testPassed = false;
+                            resultsLog += `Status: FAILED\n\n`;
+                            allTestsPassedLastSubmission = false;
+                        }
+                    } catch (e) {
+                        resultsLog += `Runtime Error during test: ${e.message}\nStatus: FAILED\n\n`;
+                        allTestsPassedLastSubmission = false;
+                    }
+                });
+
+            } catch (e) {
+                resultsLog = `Error in your code or setup:\n${e.message}\n\nEnsure your function is named "${levels[currentLevel].problem.match(/`(\w+)`/)[1]}" and correctly defined.`;
+                allTestsPassedLastSubmission = false;
+            }
+
+            outputArea.textContent = resultsLog;
+
+            if (allTestsPassedLastSubmission) {
+                codeFeedback.textContent = 'All test cases passed! Mission accomplished.';
+                showResultScreen(true, `Level ${currentLevel + 1} Cleared!`, 100, 180 - timeLeft, "Excellent");
+                if (currentLevel < levels.length -1) {
+                     nextLevelButton.classList.remove('hidden');
+                     nextLevelButton.disabled = false;
+                     nextLevelButton.textContent = "Proceed to Next Mission";
+
+                } else {
+                    nextLevelButton.textContent = "All Missions Complete!";
+                    nextLevelButton.classList.remove('hidden');
+                    nextLevelButton.disabled = true; // No more levels
+                }
+                updateUserProgress(currentLevel + 1);
+            } else {
+                codeFeedback.textContent = 'Some test cases failed. Review your logic and the output logs.';
+                showResultScreen(false, `Level ${currentLevel + 1} Attempt Failed`, 0, 180 - timeLeft, "Needs Review");
+                nextLevelButton.classList.add('hidden');
+            }
+        });
+
+
+        // --- Timer Logic ---
+        function startTimer(duration) {
+            timeLeft = duration;
+            clearInterval(levelTimerInterval); // Clear any existing timer
+            updateTimerDisplay();
+            levelTimerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                if (timeLeft <= 0) {
+                    clearInterval(levelTimerInterval);
+                    timeDisplay.textContent = "Time's Up!";
+                    // Handle time up (e.g., fail level, disable submit)
+                    codeFeedback.textContent = "Time's up! Mission compromised. Try again faster.";
+                    submitCodeButton.disabled = true; // Disable submit
+                    showResultScreen(false, `Level ${currentLevel + 1} Failed - Time Out`, 0, duration, "Time Out");
+                }
+            }, 1000);
+            submitCodeButton.disabled = false; // Ensure submit is enabled when timer starts
+        }
+
+        function stopTimer() {
+            clearInterval(levelTimerInterval);
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timeDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        // --- User Progress (Firebase & LocalStorage) ---
+        async function loadUserProgress() {
+            if (currentUser) {
+                try {
+                    const snapshot = await get(child(ref(database), `users/${currentUser.uid}/progress`));
+                    if (snapshot.exists()) {
+                        currentLevel = snapshot.val().level || 0;
+                    } else {
+                        currentLevel = 0; // New user
+                    }
+                } catch (error) {
+                    console.error("Error loading user progress:", error);
+                    currentLevel = 0; // Fallback
+                }
+            } else {
+                loadLocalProgress();
+            }
+        }
+
+        async function updateUserProgress(completedLevel) {
+             // We save the *next* level the user should be on, or how many levels they've completed
+            const newProgressLevel = Math.max(currentLevel, completedLevel);
+
+            if (currentUser) {
+                try {
+                    await set(ref(database, `users/${currentUser.uid}/progress`), {
+                        level: newProgressLevel,
+                        lastPlayed: new Date().toISOString()
+                    });
+                } catch (error) {
+                    console.error("Error saving user progress:", error);
+                }
+            } else {
+                // Save to local storage for non-logged-in users
+                localStorage.setItem('codeVeritasProgress', JSON.stringify({ level: newProgressLevel }));
+            }
+             // Update local currentLevel to reflect this, especially if they just completed a level
+            if (newProgressLevel > currentLevel) {
+                currentLevel = newProgressLevel -1; // If they completed level 0 (index), next is 1. So progress is 1. Stored currentLevel should be this for loading next.
+            }
+        }
+        
+        function loadLocalProgress() {
+            const savedProgress = localStorage.getItem('codeVeritasProgress');
+            if (savedProgress) {
+                currentLevel = JSON.parse(savedProgress).level || 0;
+            } else {
+                currentLevel = 0;
+            }
+        }
+
+        function displayGameComplete() {
+            missionTitle.textContent = "All Missions Accomplished!";
+            missionBrief.textContent = "You've successfully navigated all challenges. Your skills are undeniable, Agent.";
+            problemText.textContent = "Further directives will be issued when available. Stand by.";
+            codeEditor.value = "// System Standby //";
+            codeEditor.disabled = true;
+            submitCodeButton.disabled = true;
+            hintButton.disabled = true;
+            resetCodeButton.disabled = true;
+            nextLevelButton.classList.add('hidden');
+            outputArea.textContent = "System Integrity: 100%\nAll Operations Successful."
+            stopTimer();
+        }
+        
+        // --- Result Screen Logic ---
+        function showResultScreen(success, message, score, timeTaken, quality) {
+            resultTitle.textContent = success ? "MISSION SUCCESSFUL" : "MISSION FAILED";
+            resultTitle.style.color = success ? 'var(--success-color)' : 'var(--error-color)';
+            resultMessage.textContent = message;
+            scoreValue.textContent = score;
+            timeValue.textContent = `${timeTaken}s`;
+            qualityValue.textContent = quality; // Placeholder for now
+
+            resultModal.classList.remove('hidden');
+        }
+
+        closeResultModalButton.addEventListener('click', () => {
+            resultModal.classList.add('hidden');
+            if (allTestsPassedLastSubmission && currentLevel < levels.length -1) {
+                // If successful and more levels, automatically load next or wait for button
+                // For now, user clicks "Proceed to Next Mission"
+            } else if (allTestsPassedLastSubmission && currentLevel >= levels.length -1) {
+                 displayGameComplete();
+            } else {
+                // If failed, reset timer and allow retry
+                if (timeLeft <=0) { // if time ran out, reset level
+                    loadLevel(currentLevel);
+                } else { // if failed by submission, keep timer running or stop for review
+                    submitCodeButton.disabled = false; // Re-enable submit if not time out
+                }
+            }
+        });
+
+
+        // --- Matrix Rain Effect ---
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789@#$%^&*()*&^%';
+        const fontSize = 12;
+        const columns = canvas.width / fontSize;
+        const drops = [];
+
+        for (let x = 0; x < columns; x++) {
+            drops[x] = 1;
+        }
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(10, 10, 10, 0.04)'; // Darker, more transparent for slower fade
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = 'rgba(0, 255, 65, 0.7)'; // Neon green, slightly transparent
+            ctx.font = fontSize + 'px Courier New';
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = letters[Math.floor(Math.random() * letters.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+        
+        let matrixInterval = setInterval(drawMatrix, 45); // Slower for performance
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            // Recalculate columns and reset drops if necessary
+            // For simplicity, this basic version might not perfectly adapt column count on resize without refresh
+            clearInterval(matrixInterval); // Stop old one
+            const newColumns = canvas.width / fontSize;
+            drops.length = 0; // Clear old drops
+             for (let x = 0; x < newColumns; x++) {
+                drops[x] = 1 + Math.floor(Math.random() * (canvas.height / fontSize) ); // Randomize start
+            }
+            matrixInterval = setInterval(drawMatrix, 45); // Restart with new settings
+        });
+
+
+        // Initial Load (check auth state which triggers game load or shows login)
+        // onAuthStateChanged handles the initial view.
+        // If not logged in, we might want to load level 0 from local storage.
+        if (!currentUser) {
+             loadLocalProgress(); // Load progress from local storage if not logged in
+             if (authContainer.classList.contains('hidden')) { // if auth is hidden, means game should show (e.g. after a page refresh when already logged in)
+                 loadLevel(currentLevel); // load level based on local progress or 0
+             }
+        }
+
+
+    </script>
 </body>
 </html>
