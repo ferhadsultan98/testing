@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -101,18 +102,16 @@
             transform: scale(1.05);
         }
 
-        #auth-message {
+        #auth-message, #login-message, #register-message {
             margin-top: 15px;
             font-size: 0.9em;
-            min-height: 1.2em; /* Reserve space for messages */
+            min-height: 1.2em;
+            color: var(--error-color);
         }
-        #login-message, #register-message {
-             color: var(--error-color); /* Default to error color for messages */
-        }
+
         #login-message.success, #register-message.success {
             color: var(--success-color);
         }
-
 
         .toggle-auth {
             color: var(--primary-color);
@@ -122,6 +121,7 @@
             display: block;
             margin-top: 15px;
         }
+
         .toggle-auth:hover {
             text-shadow: 0 0 5px var(--primary-color);
         }
@@ -135,7 +135,7 @@
             padding: 20px;
             box-shadow: 0 0 15px var(--primary-color);
             animation: fadeIn 0.5s ease-out;
-            position: relative; /* For absolute positioned elements like timer */
+            position: relative;
         }
 
         #mission-header {
@@ -168,7 +168,7 @@
         }
 
         #code-editor {
-            width: calc(100% - 22px); /* Account for padding and border */
+            width: calc(100% - 22px);
             height: 250px;
             background-color: var(--input-bg);
             border: 1px solid var(--primary-color);
@@ -233,8 +233,9 @@
             padding: 5px 10px;
             border-radius: 3px;
             color: var(--primary-color);
-            z-index: 100; /* Ensure it's above canvas */
+            z-index: 100;
         }
+
         #user-info button {
             margin-left: 10px;
             background: var(--primary-color);
@@ -243,7 +244,6 @@
             padding: 3px 6px;
             cursor: pointer;
         }
-
 
         /* --- Result Screen (Modal) --- */
         #result-modal {
@@ -277,8 +277,16 @@
             margin-bottom: 10px;
             animation: textGlitch 4s infinite alternate;
         }
-        #result-message { font-size: 1.2em; margin-bottom: 15px; }
-        #result-score, #result-time, #result-quality { margin-bottom: 10px; }
+
+        #result-message {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+        }
+
+        #result-score, #result-time, #result-quality {
+            margin-bottom: 10px;
+        }
+
         #result-content button {
             margin-top: 20px;
             background-color: var(--primary-color);
@@ -290,8 +298,9 @@
             text-transform: uppercase;
             font-size: 1em;
         }
+
         #result-content button:hover {
-             background-color: var(--text-color);
+            background-color: var(--text-color);
             color: var(--background-color);
         }
 
@@ -305,7 +314,7 @@
             from { opacity: 0; transform: translateY(-50px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
+
         @keyframes textGlitch {
             0% { text-shadow: 0 0 2px var(--primary-color); }
             20% { text-shadow: 2px 2px 2px var(--glitch-color1), -2px -2px 2px var(--glitch-color2); }
@@ -322,8 +331,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: -1; /* Behind all content */
-            opacity: 0.3; 
+            z-index: -1;
+            opacity: 0.3;
         }
 
         /* Responsive */
@@ -344,11 +353,10 @@
                 text-align: right;
                 margin-bottom: 10px;
             }
-             #result-content {
+            #result-content {
                 width: 85%;
             }
         }
-
     </style>
 </head>
 <body>
@@ -387,7 +395,7 @@
                 <label for="register-password">Password:</label>
                 <input type="password" id="register-password" required>
             </div>
-             <div class="input-group">
+            <div class="input-group">
                 <label for="register-confirm-password">Confirm Password:</label>
                 <input type="password" id="register-confirm-password" required>
             </div>
@@ -432,7 +440,7 @@
             <button id="reset-code-button">Reset Code</button>
             <button id="hint-button">Request Hint</button>
         </div>
-         <div id="utility-controls" style="text-align: right; margin-top:10px;">
+        <div id="utility-controls" style="text-align: right; margin-top:10px;">
             <button id="next-level-button" class="hidden">Proceed to Next Mission</button>
         </div>
     </div>
@@ -449,37 +457,35 @@
     </div>
 
     <script type="module">
-        // Firebase SDK imports
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        // Firebase SDK imports (updated to version 10.14.0)
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
         import { 
             getAuth, 
             createUserWithEmailAndPassword, 
             signInWithEmailAndPassword, 
             onAuthStateChanged, 
             signOut 
-        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
         import { 
             getDatabase, 
             ref, 
             set, 
             get,
             child
-        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+        } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-database.js";
 
-        // Your web app's Firebase configuration (AS PROVIDED BY USER)
-        // CRITICAL: Ensure these values are 100% correct and your Firebase project
-        // (test-463d2) has Email/Password Authentication ENABLED in the Firebase Console.
+        // Firebase configuration
         const firebaseConfig = {
-          apiKey: "AIzaSyDhLuMymmJPkmMQKvYX8Ma94VAG-uf1kOk",
-          authDomain: "test-463d2.firebaseapp.com",
-          databaseURL: "https://test-463d2-default-rtdb.firebaseio.com",
-          projectId: "test-463d2",
-          storageBucket: "test-463d2.firebasestorage.app",
-          messagingSenderId: "793933331185",
-          appId: "1:793933331185:web:304e16633345f88fc7c750"
+            apiKey: "AIzaSyDhLuMymmJPkmMQKvYX8Ma94VAG-uf1kOk",
+            authDomain: "test-463d2.firebaseapp.com",
+            databaseURL: "https://test-463d2-default-rtdb.firebaseio.com",
+            projectId: "test-463d2",
+            storageBucket: "test-463d2.firebasestorage.app",
+            messagingSenderId: "793933331185",
+            appId: "1:793933331185:web:304e16633345f88fc7c750"
         };
 
-        // Initialize Firebase
+        // Initialize Firebase with error handling
         let app;
         let auth;
         let database;
@@ -488,25 +494,24 @@
             app = initializeApp(firebaseConfig);
             auth = getAuth(app);
             database = getDatabase(app);
+            console.log("Firebase initialized successfully.");
         } catch (error) {
             console.error("Firebase initialization error:", error);
-            // Display a user-friendly message on the auth screen
-            const authContainerCheck = document.getElementById('auth-container');
-            const loginMessageCheck = document.getElementById('login-message');
-            if (authContainerCheck && !authContainerCheck.classList.contains('hidden') && loginMessageCheck) {
-                loginMessageCheck.textContent = "CRITICAL ERROR: Could not initialize Firebase. Check console.";
-            } else if (document.body) { // Fallback if auth screen isn't visible
-                 document.body.innerHTML = `<p style="color:red; font-size:18px; text-align:center; margin-top: 50px;">
+            const authContainer = document.getElementById('auth-container');
+            const loginMessage = document.getElementById('login-message');
+            if (authContainer && !authContainer.classList.contains('hidden') && loginMessage) {
+                loginMessage.textContent = "CRITICAL ERROR: Could not initialize Firebase. Ensure Email/Password Authentication is enabled in Firebase Console.";
+                loginMessage.classList.add('error');
+            } else if (document.body) {
+                document.body.innerHTML = `<p style="color:red; font-size:18px; text-align:center; margin-top: 50px;">
                     CRITICAL ERROR: Could not initialize Firebase. Please ensure your Firebase project
                     (Project ID: ${firebaseConfig.projectId || 'unknown'}) is correctly configured and
-                    Authentication (Email/Password) is enabled in the Firebase Console.
-                    Check the browser console (F12) for more details. Error: ${error.message}
+                    Email/Password Authentication is enabled in the Firebase Console.
+                    Check the browser console (F12) for details. Error: ${error.message}
                     </p>`;
             }
-            // Stop further script execution if Firebase fails to initialize
-            throw error; 
+            throw error; // Stop execution if Firebase fails to initialize
         }
-
 
         // DOM Elements
         const authContainer = document.getElementById('auth-container');
@@ -550,8 +555,8 @@
         let currentUser = null;
         let currentLevel = 0;
         let levelTimerInterval;
-        let timeLeft = 180; 
-        let allTestsPassedLastSubmission = false; 
+        let timeLeft = 180;
+        let allTestsPassedLastSubmission = false;
 
         const levels = [
             { 
@@ -560,8 +565,10 @@
                 problem: "Write a JavaScript function called `reverseString` that takes one argument, a string, and returns that string reversed.",
                 template: `function reverseString(str) {\n  // Your code here\n\n  return "";\n}`,
                 testCases: [
-                    { input: "hello", expected: "olleh" }, { input: "world", expected: "dlrow" },
-                    { input: "JavaScript", expected: "tpircSavaJ" }, { input: "", expected: "" },
+                    { input: "hello", expected: "olleh" },
+                    { input: "world", expected: "dlrow" },
+                    { input: "JavaScript", expected: "tpircSavaJ" },
+                    { input: "", expected: "" },
                     { input: "a", expected: "a" }
                 ],
                 hint: "Consider using string methods like split(), reverse(), and join(), or iterate through the string."
@@ -571,7 +578,11 @@
                 brief: "Calculate the sum of elements in a data array.",
                 problem: "Write a function `sumArray(arr)` that returns the sum of all numbers in an array `arr`.",
                 template: `function sumArray(arr) {\n  // Your code here\n\n  return 0;\n}`,
-                testCases: [ { input: [1,2,3], expected: 6}, {input: [10, -2, 5], expected: 13}, {input: [], expected: 0} ],
+                testCases: [
+                    { input: [1, 2, 3], expected: 6 },
+                    { input: [10, -2, 5], expected: 13 },
+                    { input: [], expected: 0 }
+                ],
                 hint: "A loop or the reduce() method can be helpful here."
             }
         ];
@@ -584,8 +595,13 @@
         };
 
         loginButton.addEventListener('click', async () => {
-            const email = loginEmailInput.value;
+            const email = loginEmailInput.value.trim();
             const password = loginPasswordInput.value;
+            if (!email || !password) {
+                loginMessage.textContent = 'Please enter both email and password.';
+                loginMessage.classList.add('error');
+                return;
+            }
             loginMessage.textContent = 'Attempting login...';
             loginMessage.classList.remove('success', 'error');
             try {
@@ -600,20 +616,25 @@
         });
 
         registerButton.addEventListener('click', async () => {
-            const email = registerEmailInput.value;
+            const email = registerEmailInput.value.trim();
             const password = registerPasswordInput.value;
             const confirmPassword = registerConfirmPasswordInput.value;
             registerMessage.textContent = 'Processing registration...';
             registerMessage.classList.remove('success', 'error');
 
+            if (!email || !password || !confirmPassword) {
+                registerMessage.textContent = 'All fields are required.';
+                registerMessage.classList.add('error');
+                return;
+            }
             if (password !== confirmPassword) {
                 registerMessage.textContent = 'Passwords do not match.';
                 registerMessage.classList.add('error');
                 return;
             }
             if (password.length < 6) {
-                 registerMessage.textContent = 'Password should be at least 6 characters.';
-                 registerMessage.classList.add('error');
+                registerMessage.textContent = 'Password should be at least 6 characters.';
+                registerMessage.classList.add('error');
                 return;
             }
 
@@ -632,6 +653,9 @@
         logoutButton.addEventListener('click', async () => {
             try {
                 await signOut(auth);
+                userInfoDisplay.classList.add('hidden');
+                authContainer.classList.remove('hidden');
+                gameContainer.classList.add('hidden');
             } catch (error) {
                 console.error("Logout error:", error);
                 alert("Error logging out.");
@@ -645,14 +669,14 @@
                 userInfoDisplay.classList.remove('hidden');
                 authContainer.classList.add('hidden');
                 gameContainer.classList.remove('hidden');
-                await loadUserProgress(); 
+                await loadUserProgress();
                 loadLevel(currentLevel);
             } else {
                 currentUser = null;
                 userInfoDisplay.classList.add('hidden');
                 authContainer.classList.remove('hidden');
                 gameContainer.classList.add('hidden');
-                loadLocalProgress(); 
+                loadLocalProgress();
             }
         });
 
@@ -661,7 +685,7 @@
                 displayGameComplete();
                 return;
             }
-            currentLevel = levelIndex; 
+            currentLevel = levelIndex;
             const levelData = levels[levelIndex];
             missionTitle.textContent = levelData.title;
             missionBrief.textContent = levelData.brief;
@@ -670,16 +694,16 @@
             outputArea.textContent = 'Awaiting execution...';
             codeFeedback.textContent = 'No feedback yet.';
             nextLevelButton.classList.add('hidden');
-            allTestsPassedLastSubmission = false; 
-            startTimer(180); 
+            allTestsPassedLastSubmission = false;
+            startTimer(180);
         }
-        
+
         submitCodeButton.addEventListener('click', () => {
             const userCode = codeEditor.value;
             const levelData = levels[currentLevel];
-            allTestsPassedLastSubmission = true; 
+            allTestsPassedLastSubmission = true;
             let resultsLog = `Executing for Mission: ${levelData.title}\n\n`;
-            
+
             stopTimer();
 
             try {
@@ -694,19 +718,19 @@
                 } else {
                     throw new Error("Could not determine function name from problem description. Expected format: `yourFunction` or `function yourFunction(...)`.");
                 }
-                
+
                 const scriptToRun = userCode + `\nif (typeof ${functionName} === 'function') return ${functionName}; else throw new Error("Function ${functionName} is not defined or not a function.");`;
                 const userFunction = new Function(scriptToRun)();
-                
+
                 levelData.testCases.forEach((test, index) => {
                     resultsLog += `Test Case ${index + 1}:\n`;
                     resultsLog += `Input: ${JSON.stringify(test.input)}\n`;
                     let actualOutput;
                     try {
-                        actualOutput = userFunction(test.input); // Call the extracted function
+                        actualOutput = userFunction(test.input);
                         resultsLog += `Actual Output: ${JSON.stringify(actualOutput)}\n`;
                         resultsLog += `Expected Output: ${JSON.stringify(test.expected)}\n`;
-                        
+
                         if (JSON.stringify(actualOutput) === JSON.stringify(test.expected)) {
                             resultsLog += `Status: PASSED\n\n`;
                         } else {
@@ -714,7 +738,7 @@
                             allTestsPassedLastSubmission = false;
                         }
                     } catch (e) {
-                        resultsLog += `Runtime Error in Test Case ${index + 1} (${functionName}(${JSON.stringify(test.input)})) : ${e.message}\nStatus: FAILED\n\n`;
+                        resultsLog += `Runtime Error in Test Case ${index + 1} (${functionName}(${JSON.stringify(test.input)})): ${e.message}\nStatus: FAILED\n\n`;
                         allTestsPassedLastSubmission = false;
                     }
                 });
@@ -729,15 +753,15 @@
             if (allTestsPassedLastSubmission) {
                 codeFeedback.textContent = 'All test cases passed! Mission accomplished.';
                 showResultScreen(true, `Level ${currentLevel + 1} Cleared!`, 100, 180 - timeLeft, "Excellent");
-                updateUserProgress(currentLevel + 1); 
-                if (currentLevel < levels.length -1) { 
-                     nextLevelButton.classList.remove('hidden');
-                     nextLevelButton.disabled = false;
-                     nextLevelButton.textContent = "Proceed to Next Mission";
-                } else { 
+                updateUserProgress(currentLevel + 1);
+                if (currentLevel < levels.length - 1) {
+                    nextLevelButton.classList.remove('hidden');
+                    nextLevelButton.disabled = false;
+                    nextLevelButton.textContent = "Proceed to Next Mission";
+                } else {
                     nextLevelButton.textContent = "All Missions Complete!";
                     nextLevelButton.classList.remove('hidden');
-                    nextLevelButton.disabled = true; 
+                    nextLevelButton.disabled = true;
                 }
             } else {
                 codeFeedback.textContent = 'Some test cases failed. Review your logic and the output logs.';
@@ -748,7 +772,7 @@
 
         resetCodeButton.addEventListener('click', () => {
             if (confirm("Are you sure you want to reset your code for this level?")) {
-                loadLevel(currentLevel); 
+                loadLevel(currentLevel);
             }
         });
 
@@ -756,18 +780,18 @@
             const levelData = levels[currentLevel];
             codeFeedback.textContent = levelData.hint ? `Hint: ${levelData.hint}` : 'No hints available for this mission.';
         });
-        
+
         nextLevelButton.addEventListener('click', () => {
             if (allTestsPassedLastSubmission && currentLevel < levels.length - 1) {
-                loadLevel(currentLevel + 1); 
-            } else if (currentLevel >= levels.length - 1 && allTestsPassedLastSubmission) { // Check allTestsPassed for game complete
-                 displayGameComplete();
+                loadLevel(currentLevel + 1);
+            } else if (currentLevel >= levels.length - 1 && allTestsPassedLastSubmission) {
+                displayGameComplete();
             }
         });
 
         function startTimer(duration) {
             timeLeft = duration;
-            clearInterval(levelTimerInterval); 
+            clearInterval(levelTimerInterval);
             updateTimerDisplay();
             levelTimerInterval = setInterval(() => {
                 timeLeft--;
@@ -776,12 +800,12 @@
                     clearInterval(levelTimerInterval);
                     timeDisplay.textContent = "Time's Up!";
                     codeFeedback.textContent = "Time's up! Mission compromised. Try again faster.";
-                    submitCodeButton.disabled = true; 
+                    submitCodeButton.disabled = true;
                     showResultScreen(false, `Level ${currentLevel + 1} Failed - Time Out`, 0, duration, "Time Out");
                     nextLevelButton.classList.add('hidden');
                 }
             }, 1000);
-            submitCodeButton.disabled = false; 
+            submitCodeButton.disabled = false;
         }
 
         function stopTimer() {
@@ -804,9 +828,10 @@
                     }
                 } catch (error) {
                     console.error("Error loading user progress:", error);
+                    codeFeedback.textContent = `Error loading progress: ${error.message}`;
                 }
             } else {
-                 const savedProgress = localStorage.getItem('codeVeritasProgress');
+                const savedProgress = localStorage.getItem('codeVeritasProgress');
                 if (savedProgress) {
                     levelToLoad = JSON.parse(savedProgress).level || 0;
                 }
@@ -814,9 +839,8 @@
             currentLevel = (levelToLoad < levels.length && levelToLoad >= 0) ? levelToLoad : 0;
         }
 
-        async function updateUserProgress(completedLevelNumber) { // completedLevelNumber is 1-based for user display, or next level index
-            const newProgressLevelIndex = completedLevelNumber; // This means the *next* level index user should be on
-
+        async function updateUserProgress(completedLevelNumber) {
+            const newProgressLevelIndex = completedLevelNumber;
             if (currentUser) {
                 try {
                     await set(ref(database, `users/${currentUser.uid}/progress`), {
@@ -825,19 +849,20 @@
                     });
                 } catch (error) {
                     console.error("Error saving user progress:", error);
+                    codeFeedback.textContent = `Error saving progress: ${error.message}`;
                 }
             } else {
                 localStorage.setItem('codeVeritasProgress', JSON.stringify({ level: newProgressLevelIndex }));
             }
         }
-        
-        function loadLocalProgress() { 
+
+        function loadLocalProgress() {
             const savedProgress = localStorage.getItem('codeVeritasProgress');
             let levelToLoad = 0;
             if (savedProgress) {
                 levelToLoad = JSON.parse(savedProgress).level || 0;
             }
-            currentLevel = (levelToLoad < levels.length && levelToLoad >=0) ? levelToLoad : 0;
+            currentLevel = (levelToLoad < levels.length && levelToLoad >= 0) ? levelToLoad : 0;
         }
 
         function displayGameComplete() {
@@ -852,47 +877,47 @@
             nextLevelButton.textContent = "All Missions Complete!";
             nextLevelButton.classList.remove('hidden');
             nextLevelButton.disabled = true;
-            outputArea.textContent = "System Integrity: 100%\nAll Operations Successful."
+            outputArea.textContent = "System Integrity: 100%\nAll Operations Successful.";
             stopTimer();
         }
-        
+
         function showResultScreen(success, message, score, timeTaken, quality) {
             resultTitle.textContent = success ? "MISSION SUCCESSFUL" : "MISSION FAILED";
             resultTitle.style.color = success ? 'var(--success-color)' : 'var(--error-color)';
             resultMessage.textContent = message;
             scoreValue.textContent = score;
             timeValue.textContent = `${timeTaken}s`;
-            qualityValue.textContent = quality; 
-
+            qualityValue.textContent = quality;
             resultModal.classList.remove('hidden');
         }
 
         closeResultModalButton.addEventListener('click', () => {
             resultModal.classList.add('hidden');
-            if (!allTestsPassedLastSubmission) { 
-                if (timeLeft <= 0) { 
+            if (!allTestsPassedLastSubmission) {
+                if (timeLeft <= 0) {
                     loadLevel(currentLevel);
-                } else { 
-                    submitCodeButton.disabled = false; 
+                } else {
+                    submitCodeButton.disabled = false;
                 }
             }
         });
 
+        // Matrix Rain Effect
         const canvas = document.getElementById('matrix-canvas');
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        const letters = '0123456789ABCDEF'; // Hex characters for a more "binary" matrix feel
+        const letters = '0123456789ABCDEF';
         const fontSize = 14;
-        let columns = Math.floor(canvas.width / fontSize); 
+        let columns = Math.floor(canvas.width / fontSize);
         const drops = [];
         for (let x = 0; x < columns; x++) drops[x] = 1 + Math.floor(Math.random() * (canvas.height / fontSize));
 
         function drawMatrix() {
-            ctx.fillStyle = 'rgba(10, 10, 10, 0.05)'; 
+            ctx.fillStyle = 'rgba(10, 10, 10, 0.05)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = 'rgba(0, 255, 65, 0.7)'; 
-            ctx.font = fontSize + 'px monospace'; // Use monospace for consistent char width
+            ctx.fillStyle = 'rgba(0, 255, 65, 0.7)';
+            ctx.font = fontSize + 'px monospace';
             for (let i = 0; i < drops.length; i++) {
                 const text = letters[Math.floor(Math.random() * letters.length)];
                 ctx.fillText(text, i * fontSize, drops[i] * fontSize);
@@ -900,14 +925,14 @@
                 drops[i]++;
             }
         }
-        let matrixInterval = setInterval(drawMatrix, 50); 
+        let matrixInterval = setInterval(drawMatrix, 50);
 
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            columns = Math.floor(canvas.width / fontSize); 
-            drops.length = 0; 
-             for (let x = 0; x < columns; x++) drops[x] = 1 + Math.floor(Math.random() * (canvas.height / fontSize) );
+            columns = Math.floor(canvas.width / fontSize);
+            drops.length = 0;
+            for (let x = 0; x < columns; x++) drops[x] = 1 + Math.floor(Math.random() * (canvas.height / fontSize));
         });
     </script>
 </body>
