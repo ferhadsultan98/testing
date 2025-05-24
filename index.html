@@ -4,936 +4,666 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Code Veritas - Hacker Simulation</title>
+    <title>WeightOff - Your Fitness Journey</title>
     <style>
-        /* CSS - Dark Matrix Theme & Styles */
-        :root {
-            --primary-color: #00FF41; /* Neon Green */
-            --background-color: #0A0A0A;
-            --text-color: #E0E0E0;
-            --container-bg: #1A1A1A;
-            --input-bg: #0F0F0F;
-            --border-color: #00FF41;
-            --error-color: #FF4136;
-            --success-color: #3D9970;
-            --glitch-color1: #FF00FF;
-            --glitch-color2: #00FFFF;
+        /* Global Resets & Basic Styling */
+        * {
+            margin: 0;
+            padding: 0;
+            boxSizing: border-box;
+            fontFamily: 'Arial', sans-serif;
         }
 
         body {
-            font-family: 'Courier New', Courier, monospace;
-            background-color: var(--background-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
+            backgroundColor: #f0f4f8; /* Light background for the body */
+            color: #333;
+            lineHeight: 1.6;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            flex-direction: column;
+            flexDirection: column;
+            minHeight: 100vh;
         }
 
-        .hidden {
-            display: none !important;
+        /* Header Styling */
+        .appHeader {
+            backgroundColor: #007bff; /* Blue tone */
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justifyContent: space-between;
+            alignItems: center;
+            boxShadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        /* --- Login/Register Terminal --- */
-        #auth-container {
-            background-color: var(--container-bg);
-            padding: 30px 40px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 0 20px var(--border-color);
-            width: 350px;
-            text-align: center;
-            animation: fadeIn 1s ease-in-out;
+        .logo {
+            fontSize: 1.8rem;
+            fontWeight: 'bold';
         }
 
-        #auth-container h2 {
-            color: var(--primary-color);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 25px;
-            animation: textGlitch 5s infinite alternate;
+        .appNav ul {
+            listStyle: none;
+            display: flex;
         }
 
-        .input-group {
-            margin-bottom: 20px;
-            text-align: left;
+        .appNav ul li {
+            marginLeft: 1.5rem;
         }
 
-        .input-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: var(--primary-color);
-            font-size: 0.9em;
+        .appNav ul li a {
+            color: white;
+            textDecoration: none;
+            fontSize: 1rem;
+            transition: color 0.3s ease;
         }
 
-        .input-group input {
-            width: calc(100% - 20px);
-            padding: 10px;
-            background-color: var(--input-bg);
-            border: 1px solid var(--primary-color);
-            color: var(--text-color);
-            outline: none;
-            transition: box-shadow 0.3s ease;
+        .appNav ul li a:hover {
+            color: #cce5ff; /* Lighter blue for hover */
         }
 
-        .input-group input:focus {
-            box-shadow: 0 0 10px var(--primary-color);
+        /* Main Content Area */
+        .mainContainer {
+            flex: 1;
+            padding: 1.5rem;
+            maxWidth: 1200px;
+            margin: 0 auto;
+            width: 100%;
         }
 
-        .auth-buttons button {
-            background-color: var(--primary-color);
-            color: var(--background-color);
-            border: none;
-            padding: 10px 15px;
-            margin: 5px;
+        /* Section Styling */
+        .contentSection {
+            backgroundColor: white;
+            padding: 1.5rem;
+            marginBottom: 1.5rem;
+            borderRadius: 8px;
+            boxShadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .sectionTitle {
+            fontSize: 1.5rem;
+            color: #28a745; /* Green tone for titles */
+            marginBottom: 1rem;
+            borderBottom: 2px solid #e0e0e0;
+            paddingBottom: 0.5rem;
+        }
+
+        /* Card-based styling for feed items */
+        .feedItemCard {
+            border: 1px solid #e0e0e0;
+            borderRadius: 8px;
+            padding: 1rem;
+            marginBottom: 1rem;
+            backgroundColor: #f9f9f9;
+        }
+
+        .feedItemCard .userInfo {
+            display: flex;
+            alignItems: center;
+            marginBottom: 0.75rem;
+        }
+
+        .feedItemCard .avatar {
+            width: 40px;
+            height: 40px;
+            borderRadius: 50%;
+            backgroundColor: #007bff; /* Placeholder avatar color */
+            marginRight: 0.75rem;
+            display: flex;
+            alignItems: center;
+            justifyContent: center;
+            color: white;
+            fontSize: 0.8rem;
+        }
+
+        .feedItemCard .username {
+            fontWeight: bold;
+            color: #0056b3;
+        }
+
+        .feedItemCard .postContent {
+            marginBottom: 0.75rem;
+        }
+
+        .feedItemCard .postImage {
+            maxWidth: 100%;
+            borderRadius: 4px;
+            marginBottom: 0.75rem;
+            display: none; /* Hidden by default, shown if src is set */
+        }
+
+        .feedItemCard .postActions button {
+            padding: 0.5rem 0.8rem;
+            marginRight: 0.5rem;
+            border: 1px solid #007bff;
+            backgroundColor: white;
+            color: #007bff;
+            borderRadius: 4px;
             cursor: pointer;
-            font-family: 'Courier New', Courier, monospace;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: background-color 0.3s, color 0.3s, transform 0.2s;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        .auth-buttons button:hover {
-            background-color: var(--text-color);
-            color: var(--background-color);
-            transform: scale(1.05);
+        .feedItemCard .postActions button:hover {
+            backgroundColor: #007bff;
+            color: white;
         }
 
-        #auth-message, #login-message, #register-message {
-            margin-top: 15px;
-            font-size: 0.9em;
-            min-height: 1.2em;
-            color: var(--error-color);
+        /* Form Styling */
+        .formGroup {
+            marginBottom: 1rem;
         }
 
-        #login-message.success, #register-message.success {
-            color: var(--success-color);
-        }
-
-        .toggle-auth {
-            color: var(--primary-color);
-            cursor: pointer;
-            text-decoration: underline;
-            font-size: 0.9em;
+        .formGroup label {
             display: block;
-            margin-top: 15px;
+            marginBottom: 0.3rem;
+            color: #555;
+            fontWeight: bold;
         }
 
-        .toggle-auth:hover {
-            text-shadow: 0 0 5px var(--primary-color);
+        .formGroup input[type="text"],
+        .formGroup input[type="email"],
+        .formGroup input[type="password"],
+        .formGroup input[type="number"],
+        .formGroup textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ccc;
+            borderRadius: 4px;
+            fontSize: 1rem;
         }
 
-        /* --- Game Container --- */
-        #game-container {
-            width: 90%;
-            max-width: 1000px;
-            background-color: var(--container-bg);
-            border: 1px solid var(--primary-color);
-            padding: 20px;
-            box-shadow: 0 0 15px var(--primary-color);
-            animation: fadeIn 0.5s ease-out;
-            position: relative;
-        }
-
-        #mission-header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        #mission-title {
-            color: var(--primary-color);
-            font-size: 1.8em;
-            margin-bottom: 5px;
-        }
-
-        #mission-brief {
-            font-size: 0.9em;
-            color: var(--text-color);
-        }
-
-        .game-section {
-            margin-bottom: 20px;
-            padding: 15px;
-            border: 1px dashed rgba(0, 255, 65, 0.3);
-        }
-
-        .game-section h3 {
-            color: var(--primary-color);
-            margin-top: 0;
-            border-bottom: 1px solid var(--primary-color);
-            padding-bottom: 5px;
-        }
-
-        #code-editor {
-            width: calc(100% - 22px);
-            height: 250px;
-            background-color: var(--input-bg);
-            border: 1px solid var(--primary-color);
-            color: var(--text-color);
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 1em;
-            padding: 10px;
+        .formGroup textarea {
+            minHeight: 80px;
             resize: vertical;
         }
 
-        #code-editor:focus {
-            outline: none;
-            box-shadow: 0 0 10px var(--primary-color);
-        }
-
-        #output-section pre {
-            background-color: var(--input-bg);
-            padding: 10px;
-            border: 1px solid var(--primary-color);
-            min-height: 50px;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            color: var(--text-color);
-        }
-
-        #game-controls button, #utility-controls button {
-            background-color: var(--primary-color);
-            color: var(--background-color);
+        .formButton {
+            backgroundColor: #28a745; /* Green button */
+            color: white;
+            padding: 0.75rem 1.5rem;
             border: none;
-            padding: 10px 15px;
-            margin: 5px;
+            borderRadius: 4px;
             cursor: pointer;
-            font-family: 'Courier New', Courier, monospace;
-            text-transform: uppercase;
-            transition: background-color 0.3s, color 0.3s, transform 0.2s;
+            fontSize: 1rem;
+            transition: background-color 0.3s ease;
         }
 
-        #game-controls button:hover, #utility-controls button:hover {
-            background-color: var(--text-color);
-            color: var(--background-color);
-            transform: scale(1.05);
+        .formButton:hover {
+            backgroundColor: #218838; /* Darker green on hover */
         }
 
-        #timer-section {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 1.2em;
-            color: var(--primary-color);
+        .formButton.secondary {
+            backgroundColor: #6c757d;
+        }
+        .formButton.secondary:hover {
+            backgroundColor: #5a6268;
         }
 
-        #feedback-section p {
-            font-style: italic;
+        /* Motivation Panel */
+        .motivationPanel {
+            backgroundColor: #e6f7ff; /* Light blue background */
+            borderLeft: 5px solid #007bff; /* Blue accent */
+            padding: 1rem;
         }
 
-        #user-info {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            font-size: 0.8em;
-            background: rgba(0,0,0,0.5);
-            padding: 5px 10px;
-            border-radius: 3px;
-            color: var(--primary-color);
-            z-index: 100;
+        .motivationQuote {
+            fontSize: 1.1rem;
+            fontStyle: 'italic';
+            color: #0056b3;
         }
 
-        #user-info button {
-            margin-left: 10px;
-            background: var(--primary-color);
-            color: var(--background-color);
-            border: none;
-            padding: 3px 6px;
-            cursor: pointer;
-        }
-
-        /* --- Result Screen (Modal) --- */
-        #result-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.85);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            animation: fadeIn 0.5s;
-        }
-
-        #result-content {
-            background-color: var(--container-bg);
-            padding: 30px 40px;
-            border: 2px solid var(--primary-color);
-            box-shadow: 0 0 30px var(--primary-color);
-            width: 60%;
-            max-width: 600px;
-            text-align: center;
-            animation: slideInFromTop 0.5s;
-        }
-
-        #result-content h2 {
-            color: var(--primary-color);
-            font-size: 2em;
-            margin-bottom: 10px;
-            animation: textGlitch 4s infinite alternate;
-        }
-
-        #result-message {
-            font-size: 1.2em;
-            margin-bottom: 15px;
-        }
-
-        #result-score, #result-time, #result-quality {
-            margin-bottom: 10px;
-        }
-
-        #result-content button {
-            margin-top: 20px;
-            background-color: var(--primary-color);
-            color: var(--background-color);
-            border: none;
-            padding: 12px 20px;
-            cursor: pointer;
-            font-family: 'Courier New', Courier, monospace;
-            text-transform: uppercase;
-            font-size: 1em;
-        }
-
-        #result-content button:hover {
-            background-color: var(--text-color);
-            color: var(--background-color);
-        }
-
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes slideInFromTop {
-            from { opacity: 0; transform: translateY(-50px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes textGlitch {
-            0% { text-shadow: 0 0 2px var(--primary-color); }
-            20% { text-shadow: 2px 2px 2px var(--glitch-color1), -2px -2px 2px var(--glitch-color2); }
-            22% { text-shadow: 0 0 2px var(--primary-color); }
-            60% { text-shadow: -2px 2px 2px var(--glitch-color2), 2px -2px 2px var(--glitch-color1); }
-            62% { text-shadow: 0 0 2px var(--primary-color); }
-            100% { text-shadow: 0 0 2px var(--primary-color); }
-        }
-
-        /* Matrix Rain Canvas */
-        #matrix-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            opacity: 0.3;
-        }
-
-        /* Responsive */
+        /* Responsive Design */
         @media (max-width: 768px) {
-            #auth-container {
-                width: 85%;
-                padding: 20px;
+            .appHeader {
+                flexDirection: column;
+                padding: 1rem;
             }
-            #game-container {
-                width: 95%;
-                padding: 15px;
+            .appNav ul {
+                marginTop: 0.5rem;
+                justifyContent: center;
             }
-            #code-editor {
-                height: 200px;
+            .appNav ul li {
+                marginLeft: 0.75rem;
+                marginRight: 0.75rem;
             }
-            #timer-section {
-                position: static;
-                text-align: right;
-                margin-bottom: 10px;
-            }
-            #result-content {
-                width: 85%;
+            .sectionTitle {
+                fontSize: 1.3rem;
             }
         }
+
+        @media (max-width: 480px) {
+            .logo {
+                fontSize: 1.5rem;
+            }
+            .appNav ul li a {
+                fontSize: 0.9rem;
+            }
+            .feedItemCard .postActions button {
+                padding: 0.4rem 0.6rem;
+                font-size: 0.9rem;
+            }
+            .formButton {
+                padding: 0.6rem 1.2rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Dashboard-like Profile Section (Very Basic) */
+        .profileDashboard {
+            display: grid;
+            gridTemplateColumns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .profileWidget {
+            backgroundColor: #f9f9f9;
+            padding: 1rem;
+            borderRadius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .profileWidget h3 {
+            color: #007bff;
+            marginBottom: 0.5rem;
+        }
+
+        /* Footer Styling */
+        .appFooter {
+            textAlign: center;
+            padding: 1rem;
+            backgroundColor: #343a40;
+            color: white;
+            marginTop: auto; /* Pushes footer to bottom */
+        }
+
     </style>
 </head>
 <body>
-    <canvas id="matrix-canvas"></canvas>
 
-    <div id="user-info" class="hidden">
-        Logged in as: <span id="user-email-display"></span>
-        <button id="logout-button">Logout</button>
-    </div>
+    <header class="appHeader">
+        <div class="logo">WeightOff</div>
+        <nav class="appNav">
+            <ul>
+                <li><a href="#feed" onclick="showSection('feedSection')">Feed</a></li>
+                <li><a href="#tracker" onclick="showSection('trackerSection')">Tracker</a></li>
+                <li><a href="#profile" onclick="showSection('profileSection')">Profile</a></li>
+                <li><a href="#login" onclick="showSection('authSection')">Login/Register</a></li>
+            </ul>
+        </nav>
+    </header>
 
-    <div id="auth-container">
-        <div id="login-view">
-            <h2>System Access</h2>
-            <div class="input-group">
-                <label for="login-email">Email:</label>
-                <input type="email" id="login-email" required>
+    <main class="mainContainer">
+        <section id="authSection" class="contentSection">
+            <h2 class="sectionTitle">Join WeightOff</h2>
+            <div id="loginForm">
+                <h3>Login</h3>
+                <form onsubmit="handleMockLogin(event)">
+                    <div class="formGroup">
+                        <label for="loginEmail">Email:</label>
+                        <input type="email" id="loginEmail" required>
+                    </div>
+                    <div class="formGroup">
+                        <label for="loginPassword">Password:</label>
+                        <input type="password" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="formButton">Login</button>
+                </form>
+                <p>Don't have an account? <a href="#" onclick="toggleAuthForms()">Register here</a></p>
             </div>
-            <div class="input-group">
-                <label for="login-password">Password:</label>
-                <input type="password" id="login-password" required>
+            <div id="registerForm" style="display:none;">
+                <h3>Register</h3>
+                <form onsubmit="handleMockRegister(event)">
+                    <div class="formGroup">
+                        <label for="regUsername">Username:</label>
+                        <input type="text" id="regUsername" required>
+                    </div>
+                    <div class="formGroup">
+                        <label for="regEmail">Email:</label>
+                        <input type="email" id="regEmail" required>
+                    </div>
+                    <div class="formGroup">
+                        <label for="regPassword">Password:</label>
+                        <input type="password" id="regPassword" required>
+                    </div>
+                    <button type="submit" class="formButton">Register</button>
+                </form>
+                <p>Already have an account? <a href="#" onclick="toggleAuthForms()">Login here</a></p>
             </div>
-            <div class="auth-buttons">
-                <button id="login-button">Login</button>
+        </section>
+
+        <section id="feedSection" class="contentSection" style="display:none;">
+            <h2 class="sectionTitle">Activity Feed</h2>
+            <div class="formGroup">
+                <textarea id="newPostText" placeholder="Share your progress... (e.g., Ran 5km today! #fitness)"></textarea>
+                 <input type="file" id="postImageUpload" accept="image/*,video/*" style="margin-top: 0.5rem; display: block;">
+                <button class="formButton" onclick="addMockPost()" style="margin-top:0.5rem;">Post</button>
             </div>
-            <p id="login-message"></p>
-            <span class="toggle-auth" onclick="toggleAuthView(false)">Need an account? Register</span>
-        </div>
-
-        <div id="register-view" class="hidden">
-            <h2>New Agent Registration</h2>
-            <div class="input-group">
-                <label for="register-email">Email:</label>
-                <input type="email" id="register-email" required>
+            <div id="feedItemsContainer">
+                <div class="feedItemCard">
+                    <div class="userInfo">
+                        <div class="avatar">U1</div>
+                        <span class="username">FitnessFan123</span>
+                    </div>
+                    <p class="postContent">Just finished a 30-min workout! Feeling great. #motivation</p>
+                    <div class="postActions">
+                        <button onclick="alert('Liked!')">Like</button>
+                        <button onclick="alert('Commented!')">Comment</button>
+                        <button onclick="alert('Saved!')">Save</button>
+                    </div>
+                </div>
             </div>
-            <div class="input-group">
-                <label for="register-password">Password:</label>
-                <input type="password" id="register-password" required>
+        </section>
+
+        <section id="trackerSection" class="contentSection" style="display:none;">
+            <h2 class="sectionTitle">Weight Tracker</h2>
+            <div class="formGroup">
+                <label for="weightInput">Log Current Weight (kg):</label>
+                <input type="number" id="weightInput" step="0.1" placeholder="e.g., 75.5">
+                <button class="formButton" onclick="logMockWeight()" style="margin-top:0.5rem;">Log Weight</button>
             </div>
-            <div class="input-group">
-                <label for="register-confirm-password">Confirm Password:</label>
-                <input type="password" id="register-confirm-password" required>
+            <div class="motivationPanel">
+                <p class="motivationQuote" id="motivationQuoteDisplay">"The journey of a thousand miles begins with a single step." - Lao Tzu</p>
             </div>
-            <div class="auth-buttons">
-                <button id="register-button">Register</button>
+            <div id="weightLog" style="margin-top: 1rem;">
+                <h4>Your Log:</h4>
+                <ul id="weightLogList">
+                    <li><em>No weights logged yet.</em></li>
+                </ul>
             </div>
-            <p id="register-message"></p>
-            <span class="toggle-auth" onclick="toggleAuthView(true)">Already have access? Login</span>
-        </div>
-    </div>
+            <div style="margin-top:1rem; padding:1rem; background-color: #e9ecef; border-radius:4px; text-align:center;">
+                Visual Progress Chart (Line/Bar) - Placeholder
+            </div>
+        </section>
 
-    <div id="game-container" class="hidden">
-        <div id="timer-section">Time Left: <span id="time-display">03:00</span></div>
-        
-        <div id="mission-header">
-            <h2 id="mission-title">Mission: Null Pointer</h2>
-            <p id="mission-brief">Initializing first challenge...</p>
-        </div>
+        <section id="profileSection" class="contentSection" style="display:none;">
+            <h2 class="sectionTitle">My Profile</h2>
+            <div class="profileDashboard">
+                <div class="profileWidget">
+                    <h3>User Details</h3>
+                    <p><strong>Username:</strong> <span id="profileUsername">User123</span></p>
+                    <p><strong>Avatar:</strong> <span class="avatar" style="width:50px; height:50px; font-size:1rem; display:inline-flex;">U</span></p>
+                    <p><strong>Current Weight:</strong> <span id="profileCurrentWeight">--</span> kg</p>
+                    <p><strong>Target Weight:</strong> 70 kg</p>
+                </div>
+                <div class="profileWidget">
+                    <h3>My Activity</h3>
+                    <p><strong>Posts Made:</strong> <span id="profilePostsCount">1</span></p>
+                    <p><strong>Weight Logs:</strong> <span id="profileWeightLogsCount">0</span></p>
+                    <p><strong>Badges Earned:</strong> <em>Early Bird</em></p>
+                </div>
+                <div class="profileWidget">
+                    <h3>Saved Posts</h3>
+                    <p><em>No saved posts yet.</em></p>
+                </div>
+                 <div class="profileWidget">
+                    <h3>Motivation Panel</h3>
+                    <p id="profileMotivation">Keep up the great work! You're doing great!</p>
+                    <p><strong>Top Users:</strong> <em>(Feature coming soon)</em></p>
+                </div>
+            </div>
+        </section>
 
-        <div class="game-section" id="problem-description-section">
-            <h3>Problem Description</h3>
-            <p id="problem-text"></p>
-        </div>
+    </main>
 
-        <div class="game-section" id="code-editor-section">
-            <h3>Code Editor</h3>
-            <textarea id="code-editor" placeholder="Enter your JavaScript code here..."></textarea>
-        </div>
+    <footer class="appFooter">
+        <p>&copy; 2025 WeightOff. Keep Pushing Your Limits!</p>
+    </footer>
 
-        <div class="game-section" id="output-section">
-            <h3>Output / Test Results</h3>
-            <pre id="output-area">Awaiting execution...</pre>
-        </div>
+    <script>
+        // Basic JavaScript for SPA-like navigation and mock interactions
 
-        <div class="game-section" id="feedback-section">
-            <h3>Intel & Feedback</h3>
-            <p id="code-feedback">No feedback yet. Compile and run your code.</p>
-        </div>
-        
-        <div id="game-controls" style="text-align: center;">
-            <button id="submit-code-button">Execute & Submit</button>
-            <button id="reset-code-button">Reset Code</button>
-            <button id="hint-button">Request Hint</button>
-        </div>
-        <div id="utility-controls" style="text-align: right; margin-top:10px;">
-            <button id="next-level-button" class="hidden">Proceed to Next Mission</button>
-        </div>
-    </div>
-
-    <div id="result-modal" class="hidden">
-        <div id="result-content">
-            <h2 id="result-title">Mission Result</h2>
-            <p id="result-message"></p>
-            <p id="result-score">Score: <span id="score-value">0</span></p>
-            <p id="result-time">Time Used: <span id="time-value">0s</span></p>
-            <p id="result-quality">Code Quality: <span id="quality-value">Pending</span></p>
-            <button id="close-result-modal-button">Acknowledge</button>
-        </div>
-    </div>
-
-    <script type="module">
-        // Firebase SDK imports (updated to version 10.14.0)
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
-        import { 
-            getAuth, 
-            createUserWithEmailAndPassword, 
-            signInWithEmailAndPassword, 
-            onAuthStateChanged, 
-            signOut 
-        } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
-        import { 
-            getDatabase, 
-            ref, 
-            set, 
-            get,
-            child
-        } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-database.js";
-
-        // Firebase configuration
+        // Firebase and Cloudinary configurations (for a real project)
         const firebaseConfig = {
-            apiKey: "AIzaSyDhLuMymmJPkmMQKvYX8Ma94VAG-uf1kOk",
-            authDomain: "test-463d2.firebaseapp.com",
-            databaseURL: "https://test-463d2-default-rtdb.firebaseio.com",
-            projectId: "test-463d2",
-            storageBucket: "test-463d2.firebasestorage.app",
-            messagingSenderId: "793933331185",
-            appId: "1:793933331185:web:304e16633345f88fc7c750"
+            apiKey: "AIzaSyCT7Ih36xNcp3rMgFB17OyleTh-kaeBBZk",
+            authDomain: "weightoff-b7916.firebaseapp.com",
+            databaseURL: "https://weightoff-b7916-default-rtdb.firebaseio.com",
+            projectId: "weightoff-b7916",
+            storageBucket: "weightoff-b7916.firebasestorage.app",
+            messagingSenderId: "623909660439",
+            appId: "1:623909660439:web:29d5305a401c84bfd2b952",
+            measurementId: "G-006DGJR805"
         };
+        // In a real React app, you would initialize Firebase:
+        // import { initializeApp } from "firebase/app";
+        // const app = initializeApp(firebaseConfig);
+        // And other services like getAuth, getFirestore, etc.
 
-        // Initialize Firebase with error handling
-        let app;
-        let auth;
-        let database;
+        const cloudinaryCloudName = "dbiltdpxh";
+        const cloudinaryPreset = "farhadsultan";
+        // In a real app, you'd use Cloudinary SDKs or fetch API to upload.
 
-        try {
-            app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            database = getDatabase(app);
-            console.log("Firebase initialized successfully.");
-        } catch (error) {
-            console.error("Firebase initialization error:", error);
-            const authContainer = document.getElementById('auth-container');
-            const loginMessage = document.getElementById('login-message');
-            if (authContainer && !authContainer.classList.contains('hidden') && loginMessage) {
-                loginMessage.textContent = "CRITICAL ERROR: Could not initialize Firebase. Ensure Email/Password Authentication is enabled in Firebase Console.";
-                loginMessage.classList.add('error');
-            } else if (document.body) {
-                document.body.innerHTML = `<p style="color:red; font-size:18px; text-align:center; margin-top: 50px;">
-                    CRITICAL ERROR: Could not initialize Firebase. Please ensure your Firebase project
-                    (Project ID: ${firebaseConfig.projectId || 'unknown'}) is correctly configured and
-                    Email/Password Authentication is enabled in the Firebase Console.
-                    Check the browser console (F12) for details. Error: ${error.message}
-                    </p>`;
-            }
-            throw error; // Stop execution if Firebase fails to initialize
-        }
-
-        // DOM Elements
-        const authContainer = document.getElementById('auth-container');
-        const gameContainer = document.getElementById('game-container');
-        const loginView = document.getElementById('login-view');
-        const registerView = document.getElementById('register-view');
-        const loginButton = document.getElementById('login-button');
-        const registerButton = document.getElementById('register-button');
-        const logoutButton = document.getElementById('logout-button');
-        const loginEmailInput = document.getElementById('login-email');
-        const loginPasswordInput = document.getElementById('login-password');
-        const registerEmailInput = document.getElementById('register-email');
-        const registerPasswordInput = document.getElementById('register-password');
-        const registerConfirmPasswordInput = document.getElementById('register-confirm-password');
-        const loginMessage = document.getElementById('login-message');
-        const registerMessage = document.getElementById('register-message');
-        const userInfoDisplay = document.getElementById('user-info');
-        const userEmailDisplay = document.getElementById('user-email-display');
-
-        const missionTitle = document.getElementById('mission-title');
-        const missionBrief = document.getElementById('mission-brief');
-        const problemText = document.getElementById('problem-text');
-        const codeEditor = document.getElementById('code-editor');
-        const outputArea = document.getElementById('output-area');
-        const codeFeedback = document.getElementById('code-feedback');
-        const submitCodeButton = document.getElementById('submit-code-button');
-        const resetCodeButton = document.getElementById('reset-code-button');
-        const hintButton = document.getElementById('hint-button');
-        const nextLevelButton = document.getElementById('next-level-button');
-        
-        const timeDisplay = document.getElementById('time-display');
-        
-        const resultModal = document.getElementById('result-modal');
-        const resultTitle = document.getElementById('result-title');
-        const resultMessage = document.getElementById('result-message');
-        const scoreValue = document.getElementById('score-value');
-        const timeValue = document.getElementById('time-value');
-        const qualityValue = document.getElementById('quality-value');
-        const closeResultModalButton = document.getElementById('close-result-modal-button');
-
-        let currentUser = null;
-        let currentLevel = 0;
-        let levelTimerInterval;
-        let timeLeft = 180;
-        let allTestsPassedLastSubmission = false;
-
-        const levels = [
-            { 
-                title: "Mission: String Reversal Protocol",
-                brief: "A critical data packet has been intercepted in reverse order. We need you to write a script to flip it back.",
-                problem: "Write a JavaScript function called `reverseString` that takes one argument, a string, and returns that string reversed.",
-                template: `function reverseString(str) {\n  // Your code here\n\n  return "";\n}`,
-                testCases: [
-                    { input: "hello", expected: "olleh" },
-                    { input: "world", expected: "dlrow" },
-                    { input: "JavaScript", expected: "tpircSavaJ" },
-                    { input: "", expected: "" },
-                    { input: "a", expected: "a" }
-                ],
-                hint: "Consider using string methods like split(), reverse(), and join(), or iterate through the string."
-            },
-            { 
-                title: "Mission: Array Summation",
-                brief: "Calculate the sum of elements in a data array.",
-                problem: "Write a function `sumArray(arr)` that returns the sum of all numbers in an array `arr`.",
-                template: `function sumArray(arr) {\n  // Your code here\n\n  return 0;\n}`,
-                testCases: [
-                    { input: [1, 2, 3], expected: 6 },
-                    { input: [10, -2, 5], expected: 13 },
-                    { input: [], expected: 0 }
-                ],
-                hint: "A loop or the reduce() method can be helpful here."
-            }
-        ];
-
-        window.toggleAuthView = (showLogin) => {
-            loginView.classList.toggle('hidden', !showLogin);
-            registerView.classList.toggle('hidden', showLogin);
-            loginMessage.textContent = '';
-            registerMessage.textContent = '';
-        };
-
-        loginButton.addEventListener('click', async () => {
-            const email = loginEmailInput.value.trim();
-            const password = loginPasswordInput.value;
-            if (!email || !password) {
-                loginMessage.textContent = 'Please enter both email and password.';
-                loginMessage.classList.add('error');
-                return;
-            }
-            loginMessage.textContent = 'Attempting login...';
-            loginMessage.classList.remove('success', 'error');
-            try {
-                await signInWithEmailAndPassword(auth, email, password);
-                loginMessage.textContent = 'Login successful! Initializing system...';
-                loginMessage.classList.add('success');
-            } catch (error) {
-                loginMessage.textContent = `Error: ${error.message} (${error.code})`;
-                loginMessage.classList.add('error');
-                console.error("Login error:", error);
-            }
-        });
-
-        registerButton.addEventListener('click', async () => {
-            const email = registerEmailInput.value.trim();
-            const password = registerPasswordInput.value;
-            const confirmPassword = registerConfirmPasswordInput.value;
-            registerMessage.textContent = 'Processing registration...';
-            registerMessage.classList.remove('success', 'error');
-
-            if (!email || !password || !confirmPassword) {
-                registerMessage.textContent = 'All fields are required.';
-                registerMessage.classList.add('error');
-                return;
-            }
-            if (password !== confirmPassword) {
-                registerMessage.textContent = 'Passwords do not match.';
-                registerMessage.classList.add('error');
-                return;
-            }
-            if (password.length < 6) {
-                registerMessage.textContent = 'Password should be at least 6 characters.';
-                registerMessage.classList.add('error');
-                return;
-            }
-
-            try {
-                await createUserWithEmailAndPassword(auth, email, password);
-                registerMessage.textContent = 'Registration successful! Please login.';
-                registerMessage.classList.add('success');
-                toggleAuthView(true);
-            } catch (error) {
-                registerMessage.textContent = `Error: ${error.message} (${error.code})`;
-                registerMessage.classList.add('error');
-                console.error("Registration error:", error);
-            }
-        });
-
-        logoutButton.addEventListener('click', async () => {
-            try {
-                await signOut(auth);
-                userInfoDisplay.classList.add('hidden');
-                authContainer.classList.remove('hidden');
-                gameContainer.classList.add('hidden');
-            } catch (error) {
-                console.error("Logout error:", error);
-                alert("Error logging out.");
-            }
-        });
-
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                currentUser = user;
-                userEmailDisplay.textContent = user.email;
-                userInfoDisplay.classList.remove('hidden');
-                authContainer.classList.add('hidden');
-                gameContainer.classList.remove('hidden');
-                await loadUserProgress();
-                loadLevel(currentLevel);
-            } else {
-                currentUser = null;
-                userInfoDisplay.classList.add('hidden');
-                authContainer.classList.remove('hidden');
-                gameContainer.classList.add('hidden');
-                loadLocalProgress();
-            }
-        });
-
-        function loadLevel(levelIndex) {
-            if (levelIndex >= levels.length) {
-                displayGameComplete();
-                return;
-            }
-            currentLevel = levelIndex;
-            const levelData = levels[levelIndex];
-            missionTitle.textContent = levelData.title;
-            missionBrief.textContent = levelData.brief;
-            problemText.textContent = levelData.problem;
-            codeEditor.value = levelData.template;
-            outputArea.textContent = 'Awaiting execution...';
-            codeFeedback.textContent = 'No feedback yet.';
-            nextLevelButton.classList.add('hidden');
-            allTestsPassedLastSubmission = false;
-            startTimer(180);
-        }
-
-        submitCodeButton.addEventListener('click', () => {
-            const userCode = codeEditor.value;
-            const levelData = levels[currentLevel];
-            allTestsPassedLastSubmission = true;
-            let resultsLog = `Executing for Mission: ${levelData.title}\n\n`;
-
-            stopTimer();
-
-            try {
-                let functionName;
-                const fnNameMatchBackticks = levelData.problem.match(/`(\w+)`/);
-                const fnNameMatchFunctionKeyword = levelData.problem.match(/function\s+(\w+)\s*\(/);
-
-                if (fnNameMatchBackticks && fnNameMatchBackticks[1]) {
-                    functionName = fnNameMatchBackticks[1];
-                } else if (fnNameMatchFunctionKeyword && fnNameMatchFunctionKeyword[1]) {
-                    functionName = fnNameMatchFunctionKeyword[1];
-                } else {
-                    throw new Error("Could not determine function name from problem description. Expected format: `yourFunction` or `function yourFunction(...)`.");
+        // Simple section toggling
+        const sections = ['authSection', 'feedSection', 'trackerSection', 'profileSection'];
+        function showSection(sectionIdToShow) {
+            sections.forEach(sectionId => {
+                const el = document.getElementById(sectionId);
+                if (el) {
+                    el.style.display = (sectionId === sectionIdToShow) ? 'block' : 'none';
                 }
+            });
+            if (sectionIdToShow === 'authSection') { // Default to login form
+                 document.getElementById('loginForm').style.display = 'block';
+                 document.getElementById('registerForm').style.display = 'none';
+            }
+        }
 
-                const scriptToRun = userCode + `\nif (typeof ${functionName} === 'function') return ${functionName}; else throw new Error("Function ${functionName} is not defined or not a function.");`;
-                const userFunction = new Function(scriptToRun)();
+        function toggleAuthForms() {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            if (loginForm.style.display === 'none') {
+                loginForm.style.display = 'block';
+                registerForm.style.display = 'none';
+            } else {
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'block';
+            }
+        }
 
-                levelData.testCases.forEach((test, index) => {
-                    resultsLog += `Test Case ${index + 1}:\n`;
-                    resultsLog += `Input: ${JSON.stringify(test.input)}\n`;
-                    let actualOutput;
-                    try {
-                        actualOutput = userFunction(test.input);
-                        resultsLog += `Actual Output: ${JSON.stringify(actualOutput)}\n`;
-                        resultsLog += `Expected Output: ${JSON.stringify(test.expected)}\n`;
+        // Mock Authentication
+        let loggedInUser = null;
+        let userPostsCount = 1; // Start with the initial mock post
+        let userWeightLogsCount = 0;
 
-                        if (JSON.stringify(actualOutput) === JSON.stringify(test.expected)) {
-                            resultsLog += `Status: PASSED\n\n`;
-                        } else {
-                            resultsLog += `Status: FAILED\n\n`;
-                            allTestsPassedLastSubmission = false;
-                        }
-                    } catch (e) {
-                        resultsLog += `Runtime Error in Test Case ${index + 1} (${functionName}(${JSON.stringify(test.input)})): ${e.message}\nStatus: FAILED\n\n`;
-                        allTestsPassedLastSubmission = false;
+        function handleMockLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            if (email) {
+                loggedInUser = { email: email, username: email.split('@')[0] || 'User' };
+                alert(`Welcome back, ${loggedInUser.username}!`);
+                document.getElementById('profileUsername').textContent = loggedInUser.username;
+                // Update avatar initial if username is available
+                const avatarInitial = loggedInUser.username.charAt(0).toUpperCase();
+                document.querySelector('#profileSection .avatar').textContent = avatarInitial;
+
+                showSection('feedSection'); // Navigate to feed after login
+                updateNavForLoggedInUser();
+            } else {
+                alert('Please enter an email.');
+            }
+        }
+
+        function handleMockRegister(event) {
+            event.preventDefault();
+            const username = document.getElementById('regUsername').value;
+            const email = document.getElementById('regEmail').value;
+            if (username && email) {
+                loggedInUser = { email: email, username: username };
+                alert(`Registration successful! Welcome, ${loggedInUser.username}!`);
+                document.getElementById('profileUsername').textContent = loggedInUser.username;
+                const avatarInitial = loggedInUser.username.charAt(0).toUpperCase();
+                document.querySelector('#profileSection .avatar').textContent = avatarInitial;
+                userPostsCount = 0; // Reset for new user
+                document.getElementById('profilePostsCount').textContent = userPostsCount;
+
+
+                showSection('feedSection'); // Navigate to feed after registration
+                updateNavForLoggedInUser();
+            } else {
+                alert('Please fill in all fields.');
+            }
+        }
+
+        function updateNavForLoggedInUser() {
+            // Potentially change nav links, e.g., hide Login/Register, show Logout
+            const authLink = document.querySelector('.appNav ul li a[href="#login"]');
+            if(authLink && loggedInUser) {
+                authLink.textContent = "Logout";
+                authLink.onclick = function() {
+                    loggedInUser = null;
+                    alert("Logged out.");
+                    showSection('authSection');
+                    authLink.textContent = "Login/Register";
+                    authLink.onclick = function() { showSection('authSection'); }; // Reset to original action
+                     document.getElementById('profileUsername').textContent = "User123"; // Reset profile
+                     document.querySelector('#profileSection .avatar').textContent = "U";
+                     document.getElementById('profileCurrentWeight').textContent = "--";
+                };
+            }
+        }
+
+
+        // Mock Post
+        function addMockPost() {
+            if (!loggedInUser) {
+                alert("Please login to post.");
+                showSection('authSection');
+                return;
+            }
+            const postText = document.getElementById('newPostText').value;
+            const postImageFile = document.getElementById('postImageUpload').files[0];
+
+            if (!postText.trim() && !postImageFile) {
+                alert("Please write something or select an image/video to post.");
+                return;
+            }
+
+            const feedItemsContainer = document.getElementById('feedItemsContainer');
+            const card = document.createElement('div');
+            card.className = 'feedItemCard';
+
+            const userInitial = loggedInUser.username ? loggedInUser.username.charAt(0).toUpperCase() : 'U';
+
+            let imageHTML = '';
+            if (postImageFile) {
+                // For a real app, this is where Cloudinary upload would happen.
+                // Here, we'll just use a placeholder or try to display it locally (limited)
+                const reader = new FileReader();
+                const promise = new Promise((resolve, reject) => {
+                    reader.onload = function(e) {
+                        resolve(`<img class="postImage" src="${e.target.result}" alt="User Upload" style="display:block;">`);
                     }
+                    reader.onerror = reject;
+                    reader.readAsDataURL(postImageFile);
                 });
 
-            } catch (e) {
-                resultsLog = `Error in your code or setup:\n${e.message}\n\nEnsure your function is correctly defined and named as specified.`;
-                allTestsPassedLastSubmission = false;
+                promise.then(html => {
+                    imageHTML = html;
+                    renderPost();
+                }).catch(err => {
+                    console.error("Error reading file:", err);
+                    imageHTML = '<p><em>(Image preview failed)</em></p>';
+                    renderPost();
+                });
+            } else {
+                renderPost();
             }
 
-            outputArea.textContent = resultsLog;
 
-            if (allTestsPassedLastSubmission) {
-                codeFeedback.textContent = 'All test cases passed! Mission accomplished.';
-                showResultScreen(true, `Level ${currentLevel + 1} Cleared!`, 100, 180 - timeLeft, "Excellent");
-                updateUserProgress(currentLevel + 1);
-                if (currentLevel < levels.length - 1) {
-                    nextLevelButton.classList.remove('hidden');
-                    nextLevelButton.disabled = false;
-                    nextLevelButton.textContent = "Proceed to Next Mission";
+            function renderPost() {
+                card.innerHTML = `
+                    <div class="userInfo">
+                        <div class="avatar">${userInitial}</div>
+                        <span class="username">${loggedInUser.username}</span>
+                    </div>
+                    <p class="postContent">${escapeHTML(postText)}</p>
+                    ${imageHTML}
+                    <div class="postActions">
+                        <button onclick="alert('Liked!')">Like</button>
+                        <button onclick="alert('Commented!')">Comment</button>
+                        <button onclick="alert('Saved!')">Save</button>
+                    </div>
+                `;
+                // Add to top of feed
+                feedItemsContainer.insertBefore(card, feedItemsContainer.firstChild);
+                document.getElementById('newPostText').value = '';
+                document.getElementById('postImageUpload').value = ''; // Clear file input
+
+                userPostsCount++;
+                document.getElementById('profilePostsCount').textContent = userPostsCount;
+                document.getElementById('profileMotivation').textContent = "Great post! Keep sharing your journey.";
+
+            }
+        }
+        function escapeHTML(str) {
+            var p = document.createElement("p");
+            p.appendChild(document.createTextNode(str));
+            return p.innerHTML;
+        }
+
+
+        // Mock Weight Log
+        const motivationalQuotes = [
+            "Believe you can and you're halfway there. - Theodore Roosevelt",
+            "The only bad workout is the one that didn't happen.",
+            "Success is the sum of small efforts, repeated day in and day out. - Robert Collier",
+            "Your body can stand almost anything. It’s your mind that you have to convince.",
+            "Push yourself because no one else is going to do it for you."
+        ];
+        let lastWeight = null;
+
+        function logMockWeight() {
+             if (!loggedInUser) {
+                alert("Please login to log weight.");
+                showSection('authSection');
+                return;
+            }
+            const weightInput = document.getElementById('weightInput');
+            const weight = parseFloat(weightInput.value);
+
+            if (isNaN(weight) || weight <= 0) {
+                alert("Please enter a valid weight.");
+                return;
+            }
+
+            const weightLogList = document.getElementById('weightLogList');
+            const newLogEntry = document.createElement('li');
+            const currentDate = new Date().toLocaleDateString();
+            newLogEntry.textContent = `${currentDate}: ${weight} kg`;
+
+            if (weightLogList.firstChild && weightLogList.firstChild.textContent.includes("No weights logged yet.")) {
+                weightLogList.innerHTML = ''; // Clear initial message
+            }
+            weightLogList.appendChild(newLogEntry);
+            weightInput.value = ''; // Clear input
+
+            // Update motivation quote
+            const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
+            document.getElementById('motivationQuoteDisplay').textContent = randomQuote;
+
+            // Update profile
+            document.getElementById('profileCurrentWeight').textContent = weight;
+            userWeightLogsCount++;
+            document.getElementById('profileWeightLogsCount').textContent = userWeightLogsCount;
+
+            if(lastWeight !== null) {
+                if(weight < lastWeight) {
+                    document.getElementById('profileMotivation').textContent = `Awesome, you lost ${ (lastWeight - weight).toFixed(1) } kg since last time!`;
+                } else if (weight > lastWeight) {
+                     document.getElementById('profileMotivation').textContent = `Weight up by ${ (weight - lastWeight).toFixed(1) } kg. Stay focused!`;
                 } else {
-                    nextLevelButton.textContent = "All Missions Complete!";
-                    nextLevelButton.classList.remove('hidden');
-                    nextLevelButton.disabled = true;
-                }
-            } else {
-                codeFeedback.textContent = 'Some test cases failed. Review your logic and the output logs.';
-                showResultScreen(false, `Level ${currentLevel + 1} Attempt Failed`, 0, 180 - timeLeft, "Needs Review");
-                nextLevelButton.classList.add('hidden');
-            }
-        });
-
-        resetCodeButton.addEventListener('click', () => {
-            if (confirm("Are you sure you want to reset your code for this level?")) {
-                loadLevel(currentLevel);
-            }
-        });
-
-        hintButton.addEventListener('click', () => {
-            const levelData = levels[currentLevel];
-            codeFeedback.textContent = levelData.hint ? `Hint: ${levelData.hint}` : 'No hints available for this mission.';
-        });
-
-        nextLevelButton.addEventListener('click', () => {
-            if (allTestsPassedLastSubmission && currentLevel < levels.length - 1) {
-                loadLevel(currentLevel + 1);
-            } else if (currentLevel >= levels.length - 1 && allTestsPassedLastSubmission) {
-                displayGameComplete();
-            }
-        });
-
-        function startTimer(duration) {
-            timeLeft = duration;
-            clearInterval(levelTimerInterval);
-            updateTimerDisplay();
-            levelTimerInterval = setInterval(() => {
-                timeLeft--;
-                updateTimerDisplay();
-                if (timeLeft <= 0) {
-                    clearInterval(levelTimerInterval);
-                    timeDisplay.textContent = "Time's Up!";
-                    codeFeedback.textContent = "Time's up! Mission compromised. Try again faster.";
-                    submitCodeButton.disabled = true;
-                    showResultScreen(false, `Level ${currentLevel + 1} Failed - Time Out`, 0, duration, "Time Out");
-                    nextLevelButton.classList.add('hidden');
-                }
-            }, 1000);
-            submitCodeButton.disabled = false;
-        }
-
-        function stopTimer() {
-            clearInterval(levelTimerInterval);
-        }
-
-        function updateTimerDisplay() {
-            const minutes = Math.floor(timeLeft / 60);
-            const seconds = timeLeft % 60;
-            timeDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        }
-
-        async function loadUserProgress() {
-            let levelToLoad = 0;
-            if (currentUser) {
-                try {
-                    const snapshot = await get(child(ref(database), `users/${currentUser.uid}/progress`));
-                    if (snapshot.exists()) {
-                        levelToLoad = snapshot.val().level || 0;
-                    }
-                } catch (error) {
-                    console.error("Error loading user progress:", error);
-                    codeFeedback.textContent = `Error loading progress: ${error.message}`;
-                }
-            } else {
-                const savedProgress = localStorage.getItem('codeVeritasProgress');
-                if (savedProgress) {
-                    levelToLoad = JSON.parse(savedProgress).level || 0;
+                     document.getElementById('profileMotivation').textContent = `Weight maintained. Keep it up!`;
                 }
             }
-            currentLevel = (levelToLoad < levels.length && levelToLoad >= 0) ? levelToLoad : 0;
+            lastWeight = weight;
+
+            alert("Weight logged successfully!");
         }
 
-        async function updateUserProgress(completedLevelNumber) {
-            const newProgressLevelIndex = completedLevelNumber;
-            if (currentUser) {
-                try {
-                    await set(ref(database, `users/${currentUser.uid}/progress`), {
-                        level: newProgressLevelIndex,
-                        lastPlayed: new Date().toISOString()
-                    });
-                } catch (error) {
-                    console.error("Error saving user progress:", error);
-                    codeFeedback.textContent = `Error saving progress: ${error.message}`;
-                }
-            } else {
-                localStorage.setItem('codeVeritasProgress', JSON.stringify({ level: newProgressLevelIndex }));
-            }
-        }
-
-        function loadLocalProgress() {
-            const savedProgress = localStorage.getItem('codeVeritasProgress');
-            let levelToLoad = 0;
-            if (savedProgress) {
-                levelToLoad = JSON.parse(savedProgress).level || 0;
-            }
-            currentLevel = (levelToLoad < levels.length && levelToLoad >= 0) ? levelToLoad : 0;
-        }
-
-        function displayGameComplete() {
-            missionTitle.textContent = "All Missions Accomplished!";
-            missionBrief.textContent = "You've successfully navigated all challenges. Your skills are undeniable, Agent.";
-            problemText.textContent = "Further directives will be issued when available. Stand by.";
-            codeEditor.value = "// System Standby //";
-            codeEditor.disabled = true;
-            submitCodeButton.disabled = true;
-            hintButton.disabled = true;
-            resetCodeButton.disabled = true;
-            nextLevelButton.textContent = "All Missions Complete!";
-            nextLevelButton.classList.remove('hidden');
-            nextLevelButton.disabled = true;
-            outputArea.textContent = "System Integrity: 100%\nAll Operations Successful.";
-            stopTimer();
-        }
-
-        function showResultScreen(success, message, score, timeTaken, quality) {
-            resultTitle.textContent = success ? "MISSION SUCCESSFUL" : "MISSION FAILED";
-            resultTitle.style.color = success ? 'var(--success-color)' : 'var(--error-color)';
-            resultMessage.textContent = message;
-            scoreValue.textContent = score;
-            timeValue.textContent = `${timeTaken}s`;
-            qualityValue.textContent = quality;
-            resultModal.classList.remove('hidden');
-        }
-
-        closeResultModalButton.addEventListener('click', () => {
-            resultModal.classList.add('hidden');
-            if (!allTestsPassedLastSubmission) {
-                if (timeLeft <= 0) {
-                    loadLevel(currentLevel);
-                } else {
-                    submitCodeButton.disabled = false;
-                }
-            }
+        // Initial setup
+        document.addEventListener('DOMContentLoaded', () => {
+            showSection('authSection'); // Show auth section by default
+            // If you want to default to another section, change it here e.g. showSection('feedSection')
+            // and handle loggedInUser state accordingly.
         });
 
-        // Matrix Rain Effect
-        const canvas = document.getElementById('matrix-canvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        const letters = '0123456789ABCDEF';
-        const fontSize = 14;
-        let columns = Math.floor(canvas.width / fontSize);
-        const drops = [];
-        for (let x = 0; x < columns; x++) drops[x] = 1 + Math.floor(Math.random() * (canvas.height / fontSize));
-
-        function drawMatrix() {
-            ctx.fillStyle = 'rgba(10, 10, 10, 0.05)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = 'rgba(0, 255, 65, 0.7)';
-            ctx.font = fontSize + 'px monospace';
-            for (let i = 0; i < drops.length; i++) {
-                const text = letters[Math.floor(Math.random() * letters.length)];
-                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
-                drops[i]++;
-            }
-        }
-        let matrixInterval = setInterval(drawMatrix, 50);
-
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            columns = Math.floor(canvas.width / fontSize);
-            drops.length = 0;
-            for (let x = 0; x < columns; x++) drops[x] = 1 + Math.floor(Math.random() * (canvas.height / fontSize));
-        });
     </script>
 </body>
 </html>
+
