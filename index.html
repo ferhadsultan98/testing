@@ -75,7 +75,8 @@
                     {
                         method: "POST",
                         headers: {
-                            "Authorization": `Bearer ${apiKey}`
+                            "Authorization": `Bearer ${apiKey}`,
+                            "Accept": "image/png"   // ✅ əsas düzəliş
                         },
                         body: formData
                     }
