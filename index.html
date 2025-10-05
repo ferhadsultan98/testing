@@ -1,60 +1,193 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Stability AI Test</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ultra Secure Password Generator 🔒</title>
+  <script src="https://cdn.jsdelivr.net/npm/argon2-browser/dist/argon2-bundled.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono&family=Inter:wght@400;700&display=swap');
+
+    /* Reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      background: #0a0a0f;
+      color: #e0e0e0;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .container {
+      background: linear-gradient(145deg, #1f1f2d, #1a1a24);
+      border-radius: 16px;
+      box-shadow:
+        0 10px 15px rgba(124, 58, 237, 0.3),
+        inset 0 0 20px #7c3aedaa;
+      padding: 40px 36px;
+      width: 400px;
+      max-width: 90vw;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h2 {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 1.9rem;
+      margin-bottom: 20px;
+      color: #bb86fc;
+      letter-spacing: 1.2px;
+      text-shadow: 0 0 6px #7c3aed;
+      user-select: text;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px 18px;
+      border-radius: 12px;
+      border: none;
+      background: #2e2c48;
+      color: #eee;
+      font-size: 1rem;
+      font-family: 'JetBrains Mono', monospace;
+      box-shadow: inset 2px 2px 5px #1a1830,
+                  inset -2px -2px 5px #423f62;
+      transition: background-color 0.3s ease;
+      caret-color: #bb86fc;
+    }
+    input:focus {
+      outline: none;
+      background: #3c37a4;
+      box-shadow:
+        0 0 8px #bb86fc,
+        inset 2px 2px 5px #241f5b,
+        inset -2px -2px 5px #383057;
+      color: #fff;
+    }
+    
+    button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 14px 0;
+      background: #7c3aed;
+      border-radius: 12px;
+      border: none;
+      color: white;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      box-shadow:
+        0 0 20px #7c3aed,
+        0 5px 15px -5px #5119c6;
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+      user-select: none;
+    }
+    button:hover {
+      background: #9d4eed;
+      box-shadow:
+        0 0 30px #9d4eed,
+        0 7px 20px -7px #6a32b3;
+    }
+    button:active {
+      background: #6400cc;
+      box-shadow: none;
+    }
+    
+    .result {
+      margin-top: 24px;
+      width: 100%;
+      min-height: 50px;
+      background: #1b1a33;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      line-height: 1.3;
+      color: #d0cdfd;
+      user-select: text;
+      word-break: break-word;
+      box-shadow:
+        inset 2px 2px 8px #0b0a14,
+        inset -2px -2px 8px #2c2a55;
+    }
+
+    /* Footer small note for developer vibe */
+    .footer-note {
+      margin-top: 32px;
+      font-size: 0.75rem;
+      color: #6f6b9a;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.5px;
+      user-select: none;
+    }
+  </style>
 </head>
 <body>
-  <h1>Stability AI Text-to-Image Test</h1>
-  <input type="text" id="prompt" placeholder="Enter a prompt">
-  <button onclick="generateImage()">Generate</button>
-  <div id="result"></div>
+  <div class="container" role="main" aria-label="Ultra Secure Password Generator">
+    <h2>🔐 Ultra Secure Password</h2>
+    <input id="inputText" type="text" placeholder="Write a word, e.g. Farhad" aria-label="Input text for password generation" autocomplete="off" />
+    <button id="generateBtn">Generate Password</button>
+    <div id="result" class="result" aria-live="polite" aria-atomic="true"></div>
+    <div class="footer-note">Powered by Argon2id hashing • No data stored</div>
+  </div>
 
   <script>
-    const apiKey = "SENIN_YENI_API_KEY"; // platform.stability.ai-dən götür
+    document.getElementById('generateBtn').addEventListener('click', async () => {
+      const input = document.getElementById('inputText').value.trim();
+      const resultEl = document.getElementById('result');
 
-    async function generateImage() {
-      const prompt = document.getElementById("prompt").value;
-      if (!prompt) {
-        alert("Please enter a prompt");
+      if (!input) {
+        alert('Please enter a word to generate a secure password!');
         return;
       }
 
-      const formData = new FormData();
-      formData.append("prompt", prompt);
-      formData.append("output_format", "png");
-
+      resultEl.textContent = "Generating password...";
       try {
-        const response = await fetch(
-          "https://api.stability.ai/v2beta/stable-image/generate/core",
-          {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${apiKey}`,
-              "Accept": "application/json"
-            },
-            body: formData
-          }
-        );
+        // Random salt - unique every time
+        const salt = crypto.getRandomValues(new Uint8Array(16));
 
-        if (!response.ok) {
-          const err = await response.text();
-          alert("Error: " + err);
-          return;
-        }
+        // Argon2id hash
+        const hash = await argon2.hash({
+          pass: input,
+          salt,
+          type: argon2.ArgonType.Argon2id,
+          time: 3,
+          mem: 65536,
+          hashLen: 32,
+          parallelism: 1
+        });
 
-        const data = await response.json();
-        if (data && data.image_url) {
-          document.getElementById("result").innerHTML =
-            `<img src="${data.image_url}" alt="Generated Image">`;
-        } else {
-          alert("JSON cavabı şəkil linki qaytarmadı: " + JSON.stringify(data));
-        }
-      } catch (error) {
-        alert("Error: " + error.message);
+        // Convert hash bytes to base64 string as password
+        const password = btoa(String.fromCharCode(...hash.hash));
+
+        // Display first 32 chars for readability
+        resultEl.textContent = `Your Password: ${password.substring(0, 32)}`;
+      } catch (err) {
+        resultEl.textContent = "Error generating password. Try again.";
+        console.error(err);
       }
-    }
+    });
+
+    // Optional: Allow Enter key on input for better UX
+    document.getElementById('inputText').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('generateBtn').click();
+      }
+    });
   </script>
 </body>
 </html>
