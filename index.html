@@ -8,6 +8,13 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono&family=Inter:wght@400;700&display=swap');
 
+    /* Animate gradient background */
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
     /* Reset */
     * {
       margin: 0;
@@ -17,15 +24,17 @@
 
     html, body {
       height: 100%;
-      background: #0a0a0f;
+      background: linear-gradient(-45deg, #1d1c2e, #313166, #5c4a99, #7c3aed);
+      background-size: 400% 400%;
+      animation: gradientShift 15s ease infinite;
       color: #e0e0e0;
       font-family: 'Inter', sans-serif;
       display: flex;
       justify-content: center;
       align-items: center;
-      user-select: none;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
+      user-select: none;
     }
 
     .container {
@@ -40,6 +49,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      user-select: text;
     }
 
     h2 {
@@ -50,7 +60,6 @@
       color: #bb86fc;
       letter-spacing: 1.2px;
       text-shadow: 0 0 6px #7c3aed;
-      user-select: text;
     }
 
     input {
@@ -66,6 +75,11 @@
                   inset -2px -2px 5px #423f62;
       transition: background-color 0.3s ease;
       caret-color: #bb86fc;
+      user-select: text;
+    }
+    input::placeholder {
+      color: #a29bffcc;
+      font-style: italic;
     }
     input:focus {
       outline: none;
@@ -77,9 +91,15 @@
       color: #fff;
     }
     
-    button {
-      margin-top: 20px;
+    .btn-group {
       width: 100%;
+      margin-top: 20px;
+      display: flex;
+      gap: 12px;
+    }
+
+    button {
+      flex: 1;
       padding: 14px 0;
       background: #7c3aed;
       border-radius: 12px;
@@ -94,6 +114,9 @@
         0 5px 15px -5px #5119c6;
       transition: background-color 0.3s ease, box-shadow 0.3s ease;
       user-select: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
     button:hover {
       background: #9d4eed;
@@ -105,7 +128,13 @@
       background: #6400cc;
       box-shadow: none;
     }
-    
+
+    button:disabled {
+      background: grey;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
     .result {
       margin-top: 24px;
       width: 100%;
@@ -122,9 +151,15 @@
       box-shadow:
         inset 2px 2px 8px #0b0a14,
         inset -2px -2px 8px #2c2a55;
+      cursor: pointer;
+      position: relative;
+      user-select: all;
+      transition: background-color 0.3s ease;
     }
-
-    /* Footer small note for developer vibe */
+    .result:hover {
+      background-color: #2d2a59;
+    }
+    
     .footer-note {
       margin-top: 32px;
       font-size: 0.75rem;
@@ -133,28 +168,70 @@
       letter-spacing: 0.5px;
       user-select: none;
     }
+
+    /* Tooltip for copy feedback */
+    .tooltip {
+      position: absolute;
+      top: -28px;
+      right: 8px;
+      background: #7c3aeddd;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      user-select: none;
+    }
+    .result.copied .tooltip {
+      opacity: 1;
+      pointer-events: auto;
+    }
   </style>
 </head>
 <body>
   <div class="container" role="main" aria-label="Ultra Secure Password Generator">
     <h2>🔐 Ultra Secure Password</h2>
-    <input id="inputText" type="text" placeholder="Write a word, e.g. Farhad" aria-label="Input text for password generation" autocomplete="off" />
-    <button id="generateBtn">Generate Password</button>
-    <div id="result" class="result" aria-live="polite" aria-atomic="true"></div>
+    <input 
+      id="inputText" 
+      type="text" 
+      placeholder="Farhad"
+      aria-label="Input text for password generation" 
+      autocomplete="off" 
+      spellcheck="false"
+    />
+    <div class="btn-group">
+      <button id="generateBtn" aria-label="Generate secure password">Generate Password</button>
+      <button id="copyBtn" aria-label="Copy generated password" disabled>Copy</button>
+    </div>
+    <div id="result" class="result" aria-live="polite" aria-atomic="true" tabindex="0">
+      <div class="tooltip" role="tooltip">Copied!</div>
+      <!-- Password shows here -->
+    </div>
     <div class="footer-note">Powered by Argon2id hashing • No data stored</div>
   </div>
 
   <script>
-    document.getElementById('generateBtn').addEventListener('click', async () => {
-      const input = document.getElementById('inputText').value.trim();
-      const resultEl = document.getElementById('result');
+    const generateBtn = document.getElementById('generateBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const inputText = document.getElementById('inputText');
+    const resultEl = document.getElementById('result');
+    const tooltip = resultEl.querySelector('.tooltip');
+
+    async function generatePassword() {
+      const input = inputText.value.trim();
 
       if (!input) {
         alert('Please enter a word to generate a secure password!');
+        inputText.focus();
         return;
       }
 
       resultEl.textContent = "Generating password...";
+      copyBtn.disabled = true;
+      tooltip.style.opacity = 0;
       try {
         // Random salt - unique every time
         const salt = crypto.getRandomValues(new Uint8Array(16));
@@ -173,19 +250,53 @@
         // Convert hash bytes to base64 string as password
         const password = btoa(String.fromCharCode(...hash.hash));
 
-        // Display first 32 chars for readability
-        resultEl.textContent = `Your Password: ${password.substring(0, 32)}`;
+        // Display first 32 chars only for readability
+        const finalPass = password.substring(0, 32);
+        resultEl.textContent = `Your Password:
+${finalPass}`;
+        copyBtn.disabled = false;
+        resultEl.setAttribute('tabindex','0');
       } catch (err) {
         resultEl.textContent = "Error generating password. Try again.";
         console.error(err);
+        copyBtn.disabled = true;
       }
+    }
+
+    async function copyPassword() {
+      const text = resultEl.textContent.replace(/^Your Password:
+/, '').trim();
+      if (!text) {
+        alert('Nothing to copy yet!');
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(text);
+        tooltip.style.opacity = 1;
+        resultEl.classList.add('copied');
+        setTimeout(() => {
+          tooltip.style.opacity = 0;
+          resultEl.classList.remove('copied');
+        }, 1500);
+      } catch (err) {
+        alert('Failed to copy!');
+      }
+    }
+
+    // Clicking the password text also copies it
+    resultEl.addEventListener('click', () => {
+      if (!copyBtn.disabled) copyPassword();
     });
 
-    // Optional: Allow Enter key on input for better UX
-    document.getElementById('inputText').addEventListener('keydown', (e) => {
+    // Button clicks
+    generateBtn.addEventListener('click', generatePassword);
+    copyBtn.addEventListener('click', copyPassword);
+
+    // Enter key triggers generate
+    inputText.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        document.getElementById('generateBtn').click();
+        generateBtn.click();
       }
     });
   </script>
